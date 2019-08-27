@@ -18,6 +18,8 @@
 import java.io.File;
 import java.util.List;
 
+import javax.swing.text.Position.Bias;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -86,12 +88,27 @@ public class Principal {
 	
     public static void main(String[] args) throws Exception {
     	
+    	String modo = "";
+    	
+    	for (String arg : args) {
+    		arg = arg.toUpperCase().trim();
+    		
+    		if(arg.equals("-WEB")) {
+    			modo = "WEB";
+    		} else if(arg.equals("-CONSOLE")) {
+    			modo = "CONSOLE";
+    		} else {
+    			System.out.println("java Principal");
+    		}
+    	}
+    	
+    	
     	String dataLocalPath = System.getProperty("user.dir") + "\\" ;
     	
         int seed = 123;
         double learningRate = 0.01;
-        int batchSize = 8;
-        int nEpochs = 3000;
+        int batchSize = 5;
+        int nEpochs = 10;
 
         int numInputs = 3;
         int numOutputs = 2;
@@ -101,41 +118,27 @@ public class Principal {
      
         //new PreProcessadorCSV(dataLocalPath, "treinamento_tb_amostras_final_201908251648.csv").processar();
         //new PreProcessadorCSV(dataLocalPath, "validacao_tb_amostras_final_201908251648.csv").processar();
-        
-        
-        DataSet trainingData = readCSVDataset(
-        		dataLocalPath + "treinamento_teste.csv",
-                batchSize, numInputs, numOutputs);
-        
-        DataSet testData = readCSVDataset(
-        		dataLocalPath + "validacao_teste.csv",
-                batchSize, numInputs, numOutputs);
-        /*
+
         RecordReader rr = new CSVRecordReader();
         rr.initialize(new FileSplit(new File(dataLocalPath,"treinamento_teste.csv")));
-        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize);
-
-        //Load the test/evaluation data:
+        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,3,2);
+        
         RecordReader rrTest = new CSVRecordReader();
         rrTest.initialize(new FileSplit(new File(dataLocalPath,"validacao_teste.csv")));
-        DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize);
-*/
+        DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,3,2);
+
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .seed(seed) //include a random seed for reproducibility
-                .activation(Activation.RELU)
+                .seed(seed)
                 .weightInit(WeightInit.XAVIER)
-                .updater(new Nesterovs(0.9))
-                .l2(learningRate) // regularize learning model
+                .updater(new Nesterovs(learningRate, 0.9))
+                .biasInit(-1)
                 .list()
-                .layer(new DenseLayer.Builder() //create the first input layer.
-                        .nIn(numInputs)
-                        .biasInit(0)
-                        .nOut(numHiddenNodes)
+                .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
                         .build())
-                .layer(new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD) //create hidden layer
+                .layer(new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
                         .activation(Activation.SOFTMAX)
-                        .nIn(numHiddenNodes)
-                        .nOut(numOutputs)
+                        .nIn(numHiddenNodes).nOut(numOutputs)
                         .build())
                 .build();
         
@@ -143,33 +146,38 @@ public class Principal {
 
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
         model.init();
+
+		if(modo.equals("WEB")) {
+	        //Initialize the user interface backend
+	        UIServer uiServer = UIServer.getInstance();
+
+	        //Configure where the network information (gradients, activations, score vs. time etc) is to be stored
+	        //Then add the StatsListener to collect this information from the network, as it trains
+	        StatsStorage statsStorage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
+	        int listenerFrequency = 1;
+	        model.setListeners(new StatsListener(statsStorage, listenerFrequency));
+
+	        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
+	        uiServer.attach(statsStorage);
+		}
+		if(modo.equals("CONSOLE")) {
+			model.setListeners(new ScoreIterationListener(5));  //print the score with every iteration
+		}
         
-        //model.setListeners(new ScoreIterationListener(5));  //print the score with every iteration
-        
-        DataSetIterator trainData = UIExampleUtils.getMnistData();
-
-        //Initialize the user interface backend
-        UIServer uiServer = UIServer.getInstance();
-
-        //Configure where the network information (gradients, activations, score vs. time etc) is to be stored
-        //Then add the StatsListener to collect this information from the network, as it trains
-        StatsStorage statsStorage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
-        int listenerFrequency = 1;
-        model.setListeners(new StatsListener(statsStorage, listenerFrequency));
-
-        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
-        uiServer.attach(statsStorage);
-
         System.out.println("Train model....");
-        for (int i = 0; i < nEpochs; i++) {
-            model.fit(trainingData);
-        }
+        model.fit( trainIter, nEpochs );
 
         System.out.println("Evaluate model....");
-        Evaluation eval = new Evaluation(2);
-        INDArray output = model.output(testData.getFeatures());
+        Evaluation eval = new Evaluation(numOutputs);
+        while(testIter.hasNext()){
+            DataSet t = testIter.next();
+            INDArray features = t.getFeatures();
+            INDArray lables = t.getLabels();
+            INDArray predicted = model.output(features,false);
 
-        eval.eval(testData.getLabels(), output);
+            eval.eval(lables, predicted);
+
+        }
         System.out.println(eval.stats());
         
         System.out.println("****************FINALIZADO********************");

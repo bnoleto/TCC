@@ -77,9 +77,4 @@ public class PreProcessadorCSV {
 	        toSave.saveAsTextFile(outputPath);
 	}
 	
-    public static void main(String[] args) throws Exception {
-
-       
-    }
-	
 }
