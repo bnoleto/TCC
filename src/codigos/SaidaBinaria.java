@@ -1,3 +1,4 @@
+package codigos;
 /*******************************************************************************
  * Copyright (c) 2015-2019 Skymind, Inc.
  *
@@ -93,7 +94,7 @@ public class SaidaBinaria {
     	}
     	
     	
-    	String dataLocalPath = System.getProperty("user.dir") + "\\" ;
+    	String dataLocalPath = System.getProperty("user.dir") + "\\src\\resources\\" ;
     	
         int seed = 123;
         double learningRate = 0.01;
@@ -143,22 +144,20 @@ public class SaidaBinaria {
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
         model.init();
 
-        UIServer uiServer = UIServer.getInstance();
-
-        //Configure where the network information (gradients, activations, score vs. time etc) is to be stored
-        //Then add the StatsListener to collect this information from the network, as it trains
-        StatsStorage statsStorage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
-        int listenerFrequency = 1;
-        model.setListeners(new StatsListener(statsStorage, listenerFrequency));
-
-        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
-        uiServer.attach(statsStorage);
-        
-		if(modo.equals("WEB")) {
+		if(modo.equals("-WEB")) {
 	        //Initialize the user interface backend
-	        
+			UIServer uiServer = UIServer.getInstance();
+
+	        //Configure where the network information (gradients, activations, score vs. time etc) is to be stored
+	        //Then add the StatsListener to collect this information from the network, as it trains
+	        StatsStorage statsStorage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
+	        int listenerFrequency = 1;
+	        model.setListeners(new StatsListener(statsStorage, listenerFrequency));
+
+	        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
+	        uiServer.attach(statsStorage);    
 		}
-		if(modo.equals("CONSOLE")) {
+		if(modo.equals("-CONSOLE")) {
 			model.setListeners(new ScoreIterationListener(5));  //print the score with every iteration	
 		}
 		

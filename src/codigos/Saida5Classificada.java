@@ -1,3 +1,4 @@
+package codigos;
 /*******************************************************************************
  * Copyright (c) 2015-2019 Skymind, Inc.
  *
@@ -93,7 +94,7 @@ public class Saida5Classificada {
     	}
     	
     	
-    	String dataLocalPath = System.getProperty("user.dir") + "\\" ;
+    	String dataLocalPath = System.getProperty("user.dir") + "\\src\\resources\\" ;
     	
         int seed = 123;
         double learningRate = 0.01;

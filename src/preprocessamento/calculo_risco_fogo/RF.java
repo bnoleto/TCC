@@ -1,4 +1,4 @@
-package calculo_risco_fogo;
+package preprocessamento.calculo_risco_fogo;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -153,7 +153,7 @@ public class RF {
 		
 		try {
 		
-			File file = new File("processado_"+arquivo);
+			File file = new File(arquivo);
 	        FileWriter fw = new FileWriter(file);
 	        BufferedWriter bw = new BufferedWriter(fw);
 	        
@@ -178,16 +178,15 @@ public class RF {
 
 	public static void main (String[] args) {
 		
+		String pasta = System.getProperty("user.dir") + "\\src\\resources\\";
 		String arquivo = "validacao_tb_amostras_final_201908251648.csv";
 		
-		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(arquivo, 1, 5);
+		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(pasta+arquivo, 1, 5);
 		
 		ArrayList<ArrayList<String>> lista_remover = new ArrayList<ArrayList<String>>();
 		
 		for(int i = 0; i < tabela.size(); i++) {
-			
-			
-			
+
 			try {
 				double risco_observado = calcular_risco_observado(i, tabela, Vegetacao.SAVANA_CAATINGA_ABERTA);
 				
@@ -210,7 +209,7 @@ public class RF {
 			tabela.remove(registro);
 		}
 		
-		salvarCSV(arquivo, tabela);
+		salvarCSV(pasta+"processado_"+arquivo, tabela);
 		
 	}
 }

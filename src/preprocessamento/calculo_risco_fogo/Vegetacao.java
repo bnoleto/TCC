@@ -1,4 +1,4 @@
-package calculo_risco_fogo;
+package preprocessamento.calculo_risco_fogo;
 
 public enum Vegetacao {
 	OMBROFILA_DENSA_ALAGADOS,FLORESTAS_DECIDUAS_E_SAZONAIS,FLORESTAS_CONTATO_CAMPINARANA,
