@@ -135,6 +135,20 @@ public class RF {
 		}
 	}
 	
+	private static String classificar_rf_indexado(double rf_observado) {
+		if(rf_observado <= 0.15) {
+			return "0";
+		} else if (rf_observado > 0.15 && rf_observado <= 0.40) {
+			return "1";
+		} else if (rf_observado > 0.40 && rf_observado <= 0.70) {
+			return "2";
+		} else if (rf_observado > 0.70 && rf_observado <= 0.95) {
+			return "3";
+		} else {
+			return "4";
+		}
+	}
+	
 	private static void salvarCSV(String arquivo, ArrayList<ArrayList<String>> tabela) {
 		
 		try {
@@ -143,7 +157,8 @@ public class RF {
 	        FileWriter fw = new FileWriter(file);
 	        BufferedWriter bw = new BufferedWriter(fw);
 	        
-	        bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"indice_risco\",\"classe_risco\"");
+	        //bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"indice_risco\",\"classe_risco\"");
+	        bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"classe_risco\"");
 	        bw.newLine();
 	        for(int i=0;i<tabela.size();i++){
 	        	for(int j=0; j<tabela.get(i).size(); j++) {
@@ -163,7 +178,7 @@ public class RF {
 
 	public static void main (String[] args) {
 		
-		String arquivo = "treinamento_tb_amostras_final_201908251648.csv";
+		String arquivo = "validacao_tb_amostras_final_201908251648.csv";
 		
 		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(arquivo, 1, 5);
 		
@@ -171,16 +186,23 @@ public class RF {
 		
 		for(int i = 0; i < tabela.size(); i++) {
 			
+			
+			
 			try {
 				double risco_observado = calcular_risco_observado(i, tabela, Vegetacao.SAVANA_CAATINGA_ABERTA);
 				
-				tabela.get(i).add(Double.toString(risco_observado));
-				tabela.get(i).add(classificar_rf(risco_observado));
+				//tabela.get(i).add(Double.toString(risco_observado));
+				tabela.get(i).add(classificar_rf_indexado(risco_observado));
 				
-			} catch (ArrayIndexOutOfBoundsException e) {
+			} catch (Exception e) {
 				lista_remover.add(tabela.get(i));
 			}
-			
+
+		}
+		
+		for(int i = 0; i < tabela.size(); i++) {
+			tabela.get(i).remove(0); // remove data
+			tabela.get(i).remove(3); // remove boolean de existencia de incendio
 		}
 		
 		// irá remover do CSV final os registros em que não foi possível classificar o risco

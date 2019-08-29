@@ -64,7 +64,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 import java.io.IOException;
 import preprocessamento.PreProcessadorCSV;
 
-public class Principal {
+public class SaidaBinaria {
 
 	private static DataSet readCSVDataset(
         String arquivo, int batchSize, int labelIndex, int numClasses)
@@ -110,17 +110,17 @@ public class Principal {
         //new PreProcessadorCSV(dataLocalPath, "validacao_tb_amostras_final_201908251648.csv").processar();
 
         RecordReader rr = new CSVRecordReader();
-        rr.initialize(new FileSplit(new File(dataLocalPath,"treinamento_teste.csv")));
+        rr.initialize(new FileSplit(new File(dataLocalPath,"treinamento_teste_binarizado.csv")));
         DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,3,2);
         
         RecordReader rrTest = new CSVRecordReader();
-        rrTest.initialize(new FileSplit(new File(dataLocalPath,"validacao_teste.csv")));
+        rrTest.initialize(new FileSplit(new File(dataLocalPath,"validacao_teste_binarizado.csv")));
         DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,3,2);
 
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .seed(seed)
                 .weightInit(WeightInit.XAVIER)
-                .updater(new Nesterovs(learningRate, 0.001))
+                .updater(new Nesterovs(learningRate, 0.01))
                 .biasInit(-1)
                 .list()
                 .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)
@@ -143,27 +143,29 @@ public class Principal {
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
         model.init();
 
+        UIServer uiServer = UIServer.getInstance();
+
+        //Configure where the network information (gradients, activations, score vs. time etc) is to be stored
+        //Then add the StatsListener to collect this information from the network, as it trains
+        StatsStorage statsStorage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
+        int listenerFrequency = 1;
+        model.setListeners(new StatsListener(statsStorage, listenerFrequency));
+
+        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
+        uiServer.attach(statsStorage);
+        
 		if(modo.equals("WEB")) {
 	        //Initialize the user interface backend
-	        UIServer uiServer = UIServer.getInstance();
-
-	        //Configure where the network information (gradients, activations, score vs. time etc) is to be stored
-	        //Then add the StatsListener to collect this information from the network, as it trains
-	        StatsStorage statsStorage = new FileStatsStorage(new File(System.getProperty("java.io.tmpdir"), "ui-stats.dl4j"));
-	        int listenerFrequency = 1;
-	        model.setListeners(new StatsListener(statsStorage, listenerFrequency));
-
-	        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
-	        uiServer.attach(statsStorage);
+	        
 		}
 		if(modo.equals("CONSOLE")) {
-			model.setListeners(new ScoreIterationListener(5));  //print the score with every iteration
+			model.setListeners(new ScoreIterationListener(5));  //print the score with every iteration	
 		}
-        
-        System.out.println("Train model....");
+		
+        System.out.println("Realizando treinamento....");
         model.fit( trainIter, nEpochs );
 
-        System.out.println("Evaluate model....");
+        System.out.println("Gerando análise do modelo da rede....");
         Evaluation eval = new Evaluation(numOutputs);
         while(testIter.hasNext()){
             DataSet t = testIter.next();
