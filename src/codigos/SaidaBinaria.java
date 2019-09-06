@@ -59,6 +59,7 @@ import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Nadam;
 import org.nd4j.linalg.learning.config.Nesterovs;
+import org.nd4j.linalg.learning.config.Sgd;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
@@ -121,7 +122,8 @@ public class SaidaBinaria {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
                 .seed(seed)
                 .weightInit(WeightInit.XAVIER)
-                .updater(new Nesterovs(learningRate, 0.01))
+                //.updater(new Nesterovs(learningRate, 0.9))
+                .updater(new Sgd(learningRate))
                 .biasInit(-1)
                 .list()
                 .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)
@@ -130,16 +132,18 @@ public class SaidaBinaria {
                 .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes/3)
                         .activation(Activation.RELU)
                         .build())
-                .layer(new DenseLayer.Builder().nIn(numHiddenNodes/3).nOut(numHiddenNodes/9)
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes/3).nOut(numHiddenNodes/6)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes/6).nOut(numHiddenNodes/10)
                         .activation(Activation.RELU)
                         .build())
                 .layer(new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
                         .activation(Activation.SOFTMAX)
-                        .nIn(numHiddenNodes/9).nOut(numOutputs)
+                        .nIn(numHiddenNodes/10).nOut(numOutputs)
                         .build())
+                .backpropType(BackpropType.Standard)
                 .build();
-        
-        conf.setBackpropType(BackpropType.Standard);
 
         MultiLayerNetwork model = new MultiLayerNetwork(conf);
         model.init();

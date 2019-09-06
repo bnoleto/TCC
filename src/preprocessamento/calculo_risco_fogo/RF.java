@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class RF {
@@ -179,7 +178,7 @@ public class RF {
 	public static void main (String[] args) {
 		
 		String pasta = System.getProperty("user.dir") + "\\src\\resources\\";
-		String arquivo = "validacao_tb_amostras_final_201908251648.csv";
+		String arquivo = "treinamento_tb_amostras_final_201908251648.csv";
 		
 		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(pasta+arquivo, 1, 5);
 		
@@ -209,7 +208,31 @@ public class RF {
 			tabela.remove(registro);
 		}
 		
+		normalizar(tabela);
+		
 		salvarCSV(pasta+"processado_"+arquivo, tabela);
+		
+	}
+
+	private static void normalizar(ArrayList<ArrayList<String>> tabela) {
+
+		for(ArrayList<String> item : tabela) {
+			
+			// normalizar precipitação: 0mm a 100mm
+			double prec = Double.parseDouble(item.get(0))/100;
+			
+			item.set(0, Double.toString(prec));
+			
+			// normalizar temperatura: 0°C a 50°C
+			double temp = Double.parseDouble(item.get(1))/50;
+			
+			item.set(1, Double.toString(temp));
+			
+			// normalizar umidade: 0% a 100%
+			double umid = Double.parseDouble(item.get(2))/100;
+			
+			item.set(2, Double.toString(umid));
+		}
 		
 	}
 }

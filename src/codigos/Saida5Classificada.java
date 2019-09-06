@@ -16,66 +16,52 @@ package codigos;
  ******************************************************************************/
 
 
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.io.File;
-import java.util.List;
-
-import javax.swing.text.Position.Bias;
-
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
+import java.util.ArrayList;
 import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
-import org.datavec.api.transform.TransformProcess;
-import org.datavec.api.transform.schema.Schema;
-import org.datavec.api.writable.Writable;
-import org.datavec.spark.transform.SparkTransformExecutor;
-import org.datavec.spark.transform.misc.StringToWritablesFunction;
-import org.datavec.spark.transform.misc.WritablesToStringFunction;
-
 import org.datavec.api.records.reader.RecordReader;
-import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
 import org.datavec.api.split.FileSplit;
 import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
-import org.deeplearning4j.nn.api.OptimizationAlgorithm;
-import org.deeplearning4j.nn.conf.BackpropType;
-//import org.deeplearning4j.examples.download.DownloaderUtility;
+import org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator;
+import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
+import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.storage.FileStatsStorage;
-import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtils;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.SamplingXYLineRenderer;
+import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.graphics2d.svg.SVGGraphics2D;
+import org.jfree.graphics2d.svg.SVGUtils;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
+import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.learning.config.Nadam;
-import org.nd4j.linalg.learning.config.Nesterovs;
+import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
+import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
-import java.io.IOException;
-import preprocessamento.PreProcessadorCSV;
-
 public class Saida5Classificada {
 
-	private static DataSet readCSVDataset(
-        String arquivo, int batchSize, int labelIndex, int numClasses)
-        throws IOException, InterruptedException {
-
-        RecordReader rr = new CSVRecordReader();
-        rr.initialize(new FileSplit(new File(arquivo)));
-        DataSetIterator iterator = new RecordReaderDataSetIterator(rr, batchSize, labelIndex, numClasses);
-        return iterator.next();
-    }
 	
     public static void main(String[] args) throws Exception {
     	
@@ -89,7 +75,7 @@ public class Saida5Classificada {
     		} else if(arg.equals("-CONSOLE")) {
     			modo = "CONSOLE";
     		} else {
-    			System.out.println("java Principal");
+    			
     		}
     	}
     	
@@ -98,12 +84,16 @@ public class Saida5Classificada {
     	
         int seed = 123;
         double learningRate = 0.01;
-        int batchSize = 5;
-        int nEpochs = 10;
+        int batchSize = 1;
+        
+        // TODO: alterar para 100*batchSize para ver até onde o score cai (provável boa convergência)
+        int nEpochs = 20;
 
         int numInputs = 3;
         int numOutputs = 5;
-        int numHiddenNodes = 60;
+        int numHiddenNodes = 120;
+        
+        double chartStep = (double)nEpochs/1000;
         
         
      
@@ -112,39 +102,37 @@ public class Saida5Classificada {
 
         RecordReader rr = new CSVRecordReader();
         rr.initialize(new FileSplit(new File(dataLocalPath,"processado_treinamento_tb_amostras_final_201908251648.csv")));
-        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,3,5);
+        //MultiDataSetIterator trainIter = new RecordReaderMultiDataSetIterator(rr,batchSize,3,5);
+        MultiDataSetIterator trainIter = new RecordReaderMultiDataSetIterator.Builder(batchSize)
+        		.addReader("dataset", rr)
+        		.addInput("dataset", 0, 2)
+        		.addOutputOneHot("dataset", 3, 5)
+        		.build();
         
         RecordReader rrTest = new CSVRecordReader();
         rrTest.initialize(new FileSplit(new File(dataLocalPath,"processado_validacao_tb_amostras_final_201908251648.csv")));
-        DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,3,5);
-
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .seed(seed)
-                .weightInit(WeightInit.XAVIER)
-                .updater(new Nesterovs(learningRate, 0.9))
-                .biasInit(-1)
-                .list()
-                .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)
-                        .activation(Activation.RELU)
-                        .build())
-                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes/3)
-                        .activation(Activation.RELU)
-                        .build())
-                .layer(new DenseLayer.Builder().nIn(numHiddenNodes/3).nOut(numHiddenNodes/5)
-                        .activation(Activation.RELU)
-                        .build())
-                .layer(new DenseLayer.Builder().nIn(numHiddenNodes/5).nOut(numHiddenNodes/10)
-                        .activation(Activation.RELU)
-                        .build())
-                .layer(new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .activation(Activation.SOFTMAX)
-                        .nIn(numHiddenNodes/10).nOut(numOutputs)
-                        .build())
+        //DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,3,5);
+        MultiDataSetIterator testIter = new RecordReaderMultiDataSetIterator.Builder(batchSize)
+        		.addReader("dataset", rrTest)
+        		.addInput("dataset", 0, 2)
+        		.addOutputOneHot("dataset", 3, 5)
+        		.build();
+        
+        ComputationGraphConfiguration conf = new NeuralNetConfiguration.Builder()
+        		.seed(seed)
+        		.updater(new Adam(learningRate))
+        		.weightInit(WeightInit.XAVIER)
+                .graphBuilder()
+                .addInputs("in")
+                .addLayer("0", new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes).activation(Activation.RELU).build(), "in")
+                .addLayer("1", new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes).activation(Activation.RELU).build(), "0")
+                .addLayer("2", new OutputLayer.Builder().lossFunction(LossFunctions.LossFunction.MSE).nIn(numHiddenNodes).nOut(numOutputs).build(), "1")
+                .setOutputs("2")
                 .build();
         
-        conf.setBackpropType(BackpropType.Standard);
-
-        MultiLayerNetwork model = new MultiLayerNetwork(conf);
+        
+        ComputationGraph model = new ComputationGraph(conf);
+        
         model.init();
 
 		if(modo.equals("WEB")) {
@@ -164,22 +152,105 @@ public class Saida5Classificada {
 			model.setListeners(new ScoreIterationListener(5));  //print the score with every iteration
 		}
         
+		ArrayList<ArrayList<Double>> dados_treinamento = new ArrayList<ArrayList<Double>>();
+		// 0: epoca, 1: score, 2: deltascore
+		
         System.out.println("Realizando treinamento....");
-        model.fit( trainIter, nEpochs );
+        double scoreAnterior = model.score();
+        int puAnterior = model.getIterationCount();
+        
+        
+        for(int i = 0; i< nEpochs; i++) {
+        	
+        	while(trainIter.hasNext()) {
 
-        System.out.println("Gerando análise do modelo da rede....");
-        Evaluation eval = new Evaluation(numOutputs);
-        while(testIter.hasNext()){
-            DataSet t = testIter.next();
-            INDArray features = t.getFeatures();
-            INDArray lables = t.getLabels();
-            INDArray predicted = model.output(features,false);
-
-            eval.eval(lables, predicted);
-
+        		model.fit(trainIter,1);
+        		
+        		
+        	}
+        	
+        	rr.reset();
+        	System.out.println(model.evaluate(trainIter).confusionMatrix());
+        	System.out.println( "Época atual: " + model.getEpochCount() + "/" + nEpochs + " ParamUpdates: " + model.getIterationCount() + " DeltaPU: " + (model.getIterationCount()-puAnterior)  +" Score: " + model.score() + " DeltaScore: " + (model.score()-scoreAnterior));
+        	
+        	if(i == 0 || model.getEpochCount() % chartStep == 0 || i == nEpochs-1) {
+        		
+        	}
+        	
+        	scoreAnterior = model.score();
+        	puAnterior = model.getIterationCount();
+        	
+        	
         }
         
+      
+        System.out.println("Gerando análise do modelo da rede....");
+      /*
+        Evaluation eval = new Evaluation(5);
+        
+        while(testIter.hasNext()){
+        	MultiDataSet next = testIter.next();
+        	eval.eval(next.getLabels(0), next.getFeatures(0));
+        }
+        
+        
+        
         System.out.println(eval.stats());
+        System.out.println("== Falsos Negativos ==");
+        for(int i = 0; i<5; i++) {
+        	System.out.println(i+": "+eval.falseNegativeRate(i));	
+        }
+        System.out.println("== Falsos Positivos ==");
+        for(int i = 0; i<5; i++) {
+        	System.out.println(i+": "+eval.falsePositiveRate(i));	
+        }
+        */
+        // PLOTARÁ O GRÁFICO
+        
+        
+        XYSeries series1 = new XYSeries("Acurácia");
+        XYSeries series2 = new XYSeries("Precisão");
+        
+        for(int i = 0; i < dados_treinamento.size(); i++) {
+        	series1.add(dados_treinamento.get(i).get(0), dados_treinamento.get(i).get(1));
+        	series2.add(dados_treinamento.get(i).get(0), dados_treinamento.get(i).get(2));
+        }
+
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.addSeries(series1);
+        dataset.addSeries(series2);
+
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                "Dados do treinamento", 
+                "Épocas", 
+                "Porcentagem", 
+                dataset, 
+                PlotOrientation.VERTICAL,
+                true, 
+                false, 
+                false 
+        );
+         
+        chart.setBackgroundPaint(new Color(0xFF, 0xFF, 0xFF, 0));
+
+        XYPlot plot = (XYPlot)chart.getPlot();
+        
+        plot.setRenderer(new SamplingXYLineRenderer());
+
+        plot.setBackgroundPaint(new Color(0xFF, 0xFF, 0xFF, 0));
+        plot.setOutlinePaint(new Color(0x00, 0x00, 0x00, 0));
+        plot.setInsets(new RectangleInsets(0, 1, 0, 0));
+        plot.setDomainGridlinePaint(new Color(0x00, 0x00, 0x00, 0x40));
+        plot.setRangeGridlinePaint(new Color(0x00, 0x00, 0x00, 0x40));
+        
+        ChartUtils.saveChartAsPNG(new File("treinamento.png"), chart, 640, 480);
+        
+        SVGGraphics2D g2 = new SVGGraphics2D(640, 480);
+        Rectangle r = new Rectangle(0, 0, 640, 480);
+        chart.draw(g2, r);
+        
+        File f = new File("treinamento.svg");
+        SVGUtils.writeToSVG(f, g2.getSVGElement());
         
         System.out.println("****************FINALIZADO********************");
     }
