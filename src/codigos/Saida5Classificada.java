@@ -20,12 +20,17 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
+import org.apache.commons.math3.util.Precision;
 import org.datavec.api.records.reader.RecordReader;
 import org.datavec.api.split.FileSplit;
 import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.datavec.RecordReaderMultiDataSetIterator;
+import org.deeplearning4j.nn.api.Model;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -34,6 +39,7 @@ import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.optimize.api.TrainingListener;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
@@ -50,6 +56,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.graphics2d.svg.SVGGraphics2D;
 import org.jfree.graphics2d.svg.SVGUtils;
 import org.nd4j.evaluation.classification.Evaluation;
+import org.nd4j.evaluation.curves.PrecisionRecallCurve;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
@@ -65,7 +72,7 @@ public class Saida5Classificada {
 	
     public static void main(String[] args) throws Exception {
     	
-    	String modo = "";
+    	String modo = "CONSOLE";
     	
     	for (String arg : args) {
     		arg = arg.toUpperCase().trim();
@@ -87,11 +94,11 @@ public class Saida5Classificada {
         int batchSize = 1;
         
         // TODO: alterar para 100*batchSize para ver até onde o score cai (provável boa convergência)
-        int nEpochs = 20;
+        int nEpochs = 1;
 
         int numInputs = 3;
         int numOutputs = 5;
-        int numHiddenNodes = 120;
+        int numHiddenNodes = 30;
         
         double chartStep = (double)nEpochs/1000;
         
@@ -118,20 +125,82 @@ public class Saida5Classificada {
         		.addOutputOneHot("dataset", 3, 5)
         		.build();
         
-        ComputationGraphConfiguration conf = new NeuralNetConfiguration.Builder()
-        		.seed(seed)
-        		.updater(new Adam(learningRate))
-        		.weightInit(WeightInit.XAVIER)
-                .graphBuilder()
-                .addInputs("in")
-                .addLayer("0", new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes).activation(Activation.RELU).build(), "in")
-                .addLayer("1", new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes).activation(Activation.RELU).build(), "0")
-                .addLayer("2", new OutputLayer.Builder().lossFunction(LossFunctions.LossFunction.MSE).nIn(numHiddenNodes).nOut(numOutputs).build(), "1")
-                .setOutputs("2")
+        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+                .seed(seed)
+                .weightInit(WeightInit.XAVIER)
+                .updater(new Adam(learningRate))
+                .list()
+                .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.RELU)
+                        .build())
+                .layer(new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .activation(Activation.SOFTMAX)
+                        .nIn(numHiddenNodes).nOut(numOutputs)
+                        .build())
                 .build();
         
         
-        ComputationGraph model = new ComputationGraph(conf);
+        MultiLayerNetwork model = new MultiLayerNetwork(conf);
         
         model.init();
 
@@ -148,42 +217,84 @@ public class Saida5Classificada {
 	        //Attach the StatsStorage instance to the UI: this allows the contents of the StatsStorage to be visualized
 	        uiServer.attach(statsStorage);
 		}
-		if(modo.equals("CONSOLE")) {
-			model.setListeners(new ScoreIterationListener(5));  //print the score with every iteration
-		}
-        
+		
 		ArrayList<ArrayList<Double>> dados_treinamento = new ArrayList<ArrayList<Double>>();
 		// 0: epoca, 1: score, 2: deltascore
 		
+		TrainingListener t1 = new TrainingListener() {
+			
+			@Override
+			public void onGradientCalculation(Model model) {
+				
+				
+			}
+			
+			@Override
+			public void onForwardPass(Model model, Map<String, INDArray> activations) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onForwardPass(Model model, List<INDArray> activations) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onEpochStart(Model model) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onEpochEnd(Model model) {
+				Evaluation eval = new Evaluation(5);
+				
+				
+				
+				INDArray[] features = trainIter.next().getFeatures();
+				INDArray[] labels = trainIter.next().getLabels();
+				
+				eval.evalTimeSeries(labels[0], features[0]);
+				
+							
+			}
+			
+			@Override
+			public void onBackwardPass(Model model) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void iterationDone(Model model, int iteration, int epoch) {
+				System.out.println("Época " + epoch + " / Iteração " + iteration + " / Score: " + model.score());
+				
+				ArrayList<Double> iteracao_atual = new ArrayList<Double>();
+				
+				iteracao_atual.add((double)epoch);
+				iteracao_atual.add((double)model.score());
+				iteracao_atual.add((double)iteration);
+				
+				dados_treinamento.add(iteracao_atual);
+				
+			}
+		};		
+		
+		if(modo.equals("CONSOLE")) {
+			model.setListeners(t1);  //print the score with every iteration
+		}
+	
+        
+		
+		
+		System.out.println(model.summary());
+		
         System.out.println("Realizando treinamento....");
-        double scoreAnterior = model.score();
-        int puAnterior = model.getIterationCount();
         
-        
-        for(int i = 0; i< nEpochs; i++) {
-        	
-        	while(trainIter.hasNext()) {
+        model.fit(trainIter, nEpochs);
 
-        		model.fit(trainIter,1);
-        		
-        		
-        	}
-        	
-        	rr.reset();
-        	System.out.println(model.evaluate(trainIter).confusionMatrix());
-        	System.out.println( "Época atual: " + model.getEpochCount() + "/" + nEpochs + " ParamUpdates: " + model.getIterationCount() + " DeltaPU: " + (model.getIterationCount()-puAnterior)  +" Score: " + model.score() + " DeltaScore: " + (model.score()-scoreAnterior));
-        	
-        	if(i == 0 || model.getEpochCount() % chartStep == 0 || i == nEpochs-1) {
-        		
-        	}
-        	
-        	scoreAnterior = model.score();
-        	puAnterior = model.getIterationCount();
-        	
-        	
-        }
-        
-      
         System.out.println("Gerando análise do modelo da rede....");
       /*
         Evaluation eval = new Evaluation(5);
@@ -208,22 +319,22 @@ public class Saida5Classificada {
         // PLOTARÁ O GRÁFICO
         
         
-        XYSeries series1 = new XYSeries("Acurácia");
-        XYSeries series2 = new XYSeries("Precisão");
+        XYSeries series1 = new XYSeries("Score");
+//      XYSeries series2 = new XYSeries("Precisão");
         
         for(int i = 0; i < dados_treinamento.size(); i++) {
-        	series1.add(dados_treinamento.get(i).get(0), dados_treinamento.get(i).get(1));
-        	series2.add(dados_treinamento.get(i).get(0), dados_treinamento.get(i).get(2));
+        	series1.add(dados_treinamento.get(i).get(2), dados_treinamento.get(i).get(1));
+//        	series2.add(dados_treinamento.get(i).get(0), dados_treinamento.get(i).get(2));
         }
 
         XYSeriesCollection dataset = new XYSeriesCollection();
         dataset.addSeries(series1);
-        dataset.addSeries(series2);
+//        dataset.addSeries(series2);
 
         JFreeChart chart = ChartFactory.createXYLineChart(
                 "Dados do treinamento", 
-                "Épocas", 
-                "Porcentagem", 
+                "Iterações", 
+                "Score", 
                 dataset, 
                 PlotOrientation.VERTICAL,
                 true, 
