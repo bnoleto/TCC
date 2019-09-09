@@ -17,27 +17,11 @@ package codigos;
 
 
 import java.io.File;
-import java.util.List;
-
-import javax.swing.text.Position.Bias;
-
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
-import org.datavec.api.transform.TransformProcess;
-import org.datavec.api.transform.schema.Schema;
-import org.datavec.api.writable.Writable;
-import org.datavec.spark.transform.SparkTransformExecutor;
-import org.datavec.spark.transform.misc.StringToWritablesFunction;
-import org.datavec.spark.transform.misc.WritablesToStringFunction;
-
 import org.datavec.api.records.reader.RecordReader;
-import org.datavec.api.records.reader.impl.csv.CSVRecordReader;
 import org.datavec.api.split.FileSplit;
 import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.datasets.datavec.RecordReaderDataSetIterator;
-import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.BackpropType;
 //import org.deeplearning4j.examples.download.DownloaderUtility;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
@@ -50,21 +34,15 @@ import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.storage.FileStatsStorage;
-import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.learning.config.Nadam;
-import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.learning.config.Sgd;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import java.io.IOException;
-import preprocessamento.PreProcessadorCSV;
 
 public class SaidaBinaria {
 
@@ -99,8 +77,8 @@ public class SaidaBinaria {
     	
         int seed = 123;
         double learningRate = 0.01;
-        int batchSize = 5;
-        int nEpochs = 100;
+        int batchSize = 1000;
+        int nEpochs = 50;
 
         int numInputs = 3;
         int numOutputs = 2;

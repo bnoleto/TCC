@@ -65,6 +65,8 @@ public class PreProcessadorCSV {
 	                }
 				     return iter;
 	        	}, true);
+	        
+	        sc.close();
 
 	        
 	        // convert to Writable

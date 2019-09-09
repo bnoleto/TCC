@@ -1,0 +1,12 @@
+int seed = 154;
+        double learningRate = 0.001;
+        int batchSize = 1000;
+        
+        // TODO: alterar para 100*batchSize para ver até onde o score cai (provável boa convergência)
+        int nEpochs = 4000;
+        
+        //20000 épocas por enquanto é o melhor
+
+        int numInputs = 3;
+        int numOutputs = 5;
+        int numHiddenNodes = 50;
