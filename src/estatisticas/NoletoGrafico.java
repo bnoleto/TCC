@@ -46,7 +46,7 @@ public class NoletoGrafico {
 	public void gerarChart(String titulo, String labelX, String labelY, String filename, boolean yLimitado) throws IOException {
 		
 		JFreeChart chart = ChartFactory.createXYLineChart(
-                titulo, 
+                null, 
                 labelX, 
                 labelY, 
                 dataset, 

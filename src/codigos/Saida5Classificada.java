@@ -27,6 +27,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.DataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 import estatisticas.NoletoGrafico;
 import utils.Horario;
@@ -52,18 +53,18 @@ public class Saida5Classificada {
     public static void main(String[] args) throws Exception {
     	
     	// iniciar do zero / continuar de onde parou o treinamento / apenas gerar os gráficos do arquivo .stats existentes
-    	ModoTreinamento modo = ModoTreinamento.GERAR_GRAFICOS;
+    	ModoTreinamento modo = ModoTreinamento.COMECAR;
     	
-    	String nome_rede = "08092019_1918";
+    	String nome_rede = "13092019_1453";
     	
     	File dir = null;
 
     	String dataLocalPath = System.getProperty("user.dir") + "\\src\\resources\\" ;
 
-        int batchSize = 1000;
+        int batchSize = 4492;
         
         //20000 épocas por enquanto é o melhor
-        int nEpochs = 5000;
+        int nEpochs = 50000;
 
         int numOutputs = 5;
 
@@ -77,23 +78,23 @@ public class Saida5Classificada {
 
         if(modo != ModoTreinamento.GERAR_GRAFICOS) {
         	
-        	RecordReader rrTest = new CSVRecordReader(0, ',');
-            rrTest.initialize(new FileSplit(new File(dataLocalPath,"processado_validacao_tb_amostras_final_201908251648.csv")));
-            DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,3,5);
+        	RecordReader rrTest = new CSVRecordReader(1, ',');
+            rrTest.initialize(new FileSplit(new File(dataLocalPath,"normalizado_validacao_tb_amostras_final_201908251648.csv")));
+            DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,4,5);
             
-            RecordReader rr = new CSVRecordReader(0, ',');
-            rr.initialize(new FileSplit(new File(dataLocalPath,"processado_treinamento_tb_amostras_final_201908251648.csv")));
-            DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,3,5);
+            RecordReader rr = new CSVRecordReader(1, ',');
+            rr.initialize(new FileSplit(new File(dataLocalPath,"normalizado_treinamento_tb_amostras_final_201908251648.csv")));
+            DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,4,5);
             
 	        if(modo == ModoTreinamento.COMECAR) {
 	
 	        	int seed = 154;
-	        	double learningRate = 0.001;
+	        	double learningRate = 0.01;
 	        	
-	        	int numInputs = 3;
+	        	int numInputs = 4;
 	            
-	            int numHiddenNodes = 50;
-	            int maxCamadasOcultas = 20;
+	            int numHiddenNodes = 5;
+	            int maxCamadasOcultas = 4;
 	        	
 	        	nome_rede = Horario.getDiaHora();
 	        	
@@ -110,7 +111,8 @@ public class Saida5Classificada {
 	            ListBuilder b1 = new NeuralNetConfiguration.Builder()
 	            		.seed(seed)
 	                    .weightInit(WeightInit.XAVIER)
-	                    .updater(new Adam(learningRate))
+	                    //.updater(new Adam(learningRate))
+	                    .updater(new Nesterovs(learningRate, 0.01))
 	                    .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
 	                    .list()
 	                    .layer(new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)
@@ -118,7 +120,7 @@ public class Saida5Classificada {
 	                            .build());
 	            
 	            // camadas ocultas
-	            double divisor = 1.2;
+	            double divisor = 1;
 	            int n_entrada = numHiddenNodes;
 	            int n_saida = numHiddenNodes;
 	            int qtd_camadasOcultas = 0;
@@ -163,7 +165,7 @@ public class Saida5Classificada {
 	            stats_treinamento = dados.get(0);
 	            stats_teste = dados.get(1);
 	
-	        }
+	        }			
 	
 	        dir = new File(System.getProperty("user.dir") + "\\redes\\" +nome_rede+"\\");
 	        dir.mkdirs();
@@ -189,10 +191,32 @@ public class Saida5Classificada {
 	            stats_teste.add(new Double[] {evalTeste.accuracy(),evalTeste.precision(),evalTeste.recall(),evalTeste.f1(),lc.calculateScore(model)});
 	            testIter.reset();
 	            
+	            // salvar a rede a cada 1000 épocas e atualizar gráficos
+	            if(i % 1000 == 0) {
+	            	
+	            	System.out.println("Salvando rede...");
+	            	
+	            	model.save(new File(dir,"rede.nn"), true);
+	            	
+	            	FileOutputStream fos = new FileOutputStream(dir+"\\estatisticas.stats");
+	    	        ObjectOutputStream oos = new ObjectOutputStream(fos);
+	    	        oos.writeObject(dados);
+	    	        oos.close();
+	    	        
+	    	        new NoletoGrafico(dados, 0).gerarChart("Treinamento: Acurácia", "Épocas", "Acurácia", dir+"\\acuracia",true);
+	    	        new NoletoGrafico(dados, 1).gerarChart("Treinamento: Precisão", "Épocas", "Precisão", dir+"\\precisao",true);
+	    	        new NoletoGrafico(dados, 2).gerarChart("Treinamento: Recall", "Épocas", "Recall", dir+"\\recall",true);
+	    	        new NoletoGrafico(dados, 3).gerarChart("Treinamento: F1 Score", "Épocas", "F1 Score", dir+"\\f1score",true);
+	    	        new NoletoGrafico(dados, 4).gerarChart("Treinamento: Loss", "Épocas", "Loss", dir+"\\loss",false);
+	    	        
+	    	        System.out.println("Salvo!");
+	            	
+	            	
+	            }
+	            
 	        }
 	        
-	        
-	        
+
 	        model.save(new File(dir,"rede.nn"), true);
 	        
 	        System.out.println("Gerando análise do modelo da rede....");
@@ -225,6 +249,7 @@ public class Saida5Classificada {
             ois.close();
             
         }
+        
 
         new NoletoGrafico(dados, 0).gerarChart("Treinamento: Acurácia", "Épocas", "Acurácia", dir+"\\acuracia",true);
         new NoletoGrafico(dados, 1).gerarChart("Treinamento: Precisão", "Épocas", "Precisão", dir+"\\precisao",true);

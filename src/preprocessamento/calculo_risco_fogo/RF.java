@@ -76,9 +76,7 @@ public class RF {
 		return soma;
 	}
 	
-	private static double calcular_risco_observado(int i, ArrayList<ArrayList<String>> tabela, Vegetacao vegeta) throws ArrayIndexOutOfBoundsException {
-		ArrayList<String> dia_corrente = tabela.get(i);
-		
+	private static double get_pse(int i, ArrayList<ArrayList<String>> tabela) {
 		double prec1 = get_soma_precipitacao(1, i, tabela);		
 		double prec2 = get_soma_precipitacao(2, i, tabela);	
 		double prec3 = get_soma_precipitacao(3, i, tabela);
@@ -103,9 +101,21 @@ public class RF {
 		double fp61a90 = Math.exp(-0.001*(prec90-prec60));
 		double fp91a120 = Math.exp(-0.0007*(prec120-prec90));
 		
-		double pse = 105*fp1*fp2*fp3*fp4*fp5*fp6a10*fp11a15*fp16a30*fp31a60*fp61a90*fp91a120;
+		return 105*fp1*fp2*fp3*fp4*fp5*fp6a10*fp11a15*fp16a30*fp31a60*fp61a90*fp91a120;
+	}
+	
+	private static double calcular_risco_observado(int i, ArrayList<ArrayList<String>> tabela, Vegetacao vegeta) throws ArrayIndexOutOfBoundsException {
+		ArrayList<String> dia_corrente = tabela.get(i);
 		
-		double rf_basico = (0.9*(1+Math.sin(((vegetacao(vegeta)*pse)-90)*(3.14/180))))/2;
+		double pse = get_pse(i, tabela);
+		
+		double rf_basico;
+		
+		if(pse > 0.9) {
+			rf_basico = 0.9;
+		} else {
+			rf_basico = (0.9*(1+Math.sin(((vegetacao(vegeta)*pse)-90)*(3.14/180))))/2;
+		}
 		
 		double fu = (Double.parseDouble(dia_corrente.get(3))*-0.006)+1.3;
 		
@@ -157,7 +167,7 @@ public class RF {
 	        BufferedWriter bw = new BufferedWriter(fw);
 	        
 	        //bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"indice_risco\",\"classe_risco\"");
-	        bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"classe_risco\"");
+	        bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"");
 	        bw.newLine();
 	        for(int i=0;i<tabela.size();i++){
 	        	for(int j=0; j<tabela.get(i).size(); j++) {
@@ -190,6 +200,7 @@ public class RF {
 				double risco_observado = calcular_risco_observado(i, tabela, Vegetacao.SAVANA_CAATINGA_ABERTA);
 				
 				//tabela.get(i).add(Double.toString(risco_observado));
+				tabela.get(i).add(Double.toString(get_pse(i, tabela)));
 				tabela.get(i).add(classificar_rf_indexado(risco_observado));
 				
 			} catch (Exception e) {
@@ -210,28 +221,57 @@ public class RF {
 		
 		normalizar(tabela);
 		
-		salvarCSV(pasta+"processado_"+arquivo, tabela);
+		salvarCSV(pasta+"normalizado_"+arquivo, tabela);
 		
 	}
 
 	private static void normalizar(ArrayList<ArrayList<String>> tabela) {
+		
+		double[] menor = new double[tabela.size()-1];
+		double[] maior = new double[tabela.size()-1];
+		
+		// primeira passagem (descobrirá os limites da tabela)
+		for(int i = 0; i < tabela.size(); i++) {
+			if(i == 0) {
+				for(int j = 0; j < tabela.get(i).size()-1; j++) {
+					menor[j] = Double.parseDouble(tabela.get(i).get(j));	
+					maior[j] = Double.parseDouble(tabela.get(i).get(j));	
+				}
 
+			}
+			
+			for(int j = 0; j < tabela.get(i).size()-1; j++) {
+				if(Double.parseDouble(tabela.get(i).get(j)) < menor[j]) {
+					menor[j] = Double.parseDouble(tabela.get(i).get(j));
+				}
+				if(Double.parseDouble(tabela.get(i).get(j)) > maior[j]) {
+					maior[j] = Double.parseDouble(tabela.get(i).get(j));
+				}
+			}
+		}
+
+		// segunda passagem (normalização)
 		for(ArrayList<String> item : tabela) {
 			
 			// normalizar precipitação: 0mm a 100mm
-			double prec = Double.parseDouble(item.get(0))/100;
+			double prec = (Double.parseDouble(item.get(0))-menor[0])/(maior[0]-menor[0]);
 			
 			item.set(0, Double.toString(prec));
 			
 			// normalizar temperatura: 0°C a 50°C
-			double temp = Double.parseDouble(item.get(1))/50;
+			double temp = (Double.parseDouble(item.get(1))-menor[1])/(maior[1]-menor[1]);
 			
 			item.set(1, Double.toString(temp));
 			
 			// normalizar umidade: 0% a 100%
-			double umid = Double.parseDouble(item.get(2))/100;
+			double umid = (Double.parseDouble(item.get(2))-menor[2])/(maior[2]-menor[2]);
 			
 			item.set(2, Double.toString(umid));
+			
+			// normalizar umidade: 0% a 100%
+			double pse = (Double.parseDouble(item.get(3))-menor[3])/(maior[3]-menor[3]);
+			
+			item.set(3, Double.toString(pse));
 		}
 		
 	}

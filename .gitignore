@@ -5,6 +5,8 @@
 *.svg
 *.png
 
+redes/
+
 ### Eclipse ###
 .metadata
 bin/
