@@ -1,4 +1,4 @@
-package codigos;
+package main;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,7 +32,7 @@ import org.nd4j.linalg.learning.config.Sgd;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 import estatisticas.NoletoGrafico;
 import utils.Horario;
-import utils.ModoTreinamento;
+import utils.ModoExecucao;
 
 public class SaidaBinaria_v2 {
 
@@ -54,7 +54,7 @@ public class SaidaBinaria_v2 {
     public static void main(String[] args) throws Exception {
     	
     	// iniciar do zero / continuar de onde parou o treinamento
-    	ModoTreinamento modo = ModoTreinamento.CONTINUAR;
+    	ModoExecucao modo = ModoExecucao.CONTINUAR;
     	
     	String nome_rede = "08092019_2127";
     	
@@ -85,7 +85,7 @@ public class SaidaBinaria_v2 {
         rr.initialize(new FileSplit(new File(dataLocalPath,"treinamento_teste_binarizado.csv")));
         DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,3,2);
 
-        if(modo == ModoTreinamento.COMECAR) {
+        if(modo == ModoExecucao.COMECAR) {
 
         	int seed = 154;
         	double learningRate = 0.001;
@@ -150,7 +150,7 @@ public class SaidaBinaria_v2 {
         	FileUtils.writeStringToFile(new File(System.getProperty("user.dir")+"\\redes\\"+nome_rede+"\\","config.json"), conf.toJson(), Charset.forName("UTF-8"));
         	
 
-        } else if (modo == ModoTreinamento.CONTINUAR) {
+        } else if (modo == ModoExecucao.CONTINUAR) {
         	
         	model = MultiLayerNetwork.load(new File(System.getProperty("user.dir")+"\\redes\\"+nome_rede+"\\","rede.nn"), true);
         	
@@ -214,11 +214,7 @@ public class SaidaBinaria_v2 {
         oos.writeObject(dados);
         oos.close();
 
-        new NoletoGrafico(dados, 0).gerarChart("Treinamento: Acurácia", "Épocas", "Acurácia", dir+"\\acuracia",true);
-        new NoletoGrafico(dados, 1).gerarChart("Treinamento: Precisão", "Épocas", "Precisão", dir+"\\precisao",true);
-        new NoletoGrafico(dados, 2).gerarChart("Treinamento: Recall", "Épocas", "Recall", dir+"\\recall",true);
-        new NoletoGrafico(dados, 3).gerarChart("Treinamento: F1 Score", "Épocas", "F1 Score", dir+"\\f1score",true);
-        new NoletoGrafico(dados, 4).gerarChart("Treinamento: Loss", "Épocas", "Loss", dir+"\\loss",false);
+        NoletoGrafico.gerarGraficos(dados, dir);
 
         System.out.println("****************FINALIZADO********************");
     }

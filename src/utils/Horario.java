@@ -14,7 +14,7 @@ public class Horario {
 		String hora = String.format("%02d", agora.get(Calendar.HOUR_OF_DAY));
 		String minuto = String.format("%02d", agora.get(Calendar.MINUTE));
 		
-		return dia+mes+ano+"_"+hora+minuto;
+		return ano+mes+dia+"_"+hora+minuto;
 	}
 
 }

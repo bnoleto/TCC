@@ -166,8 +166,8 @@ public class RF {
 	        FileWriter fw = new FileWriter(file);
 	        BufferedWriter bw = new BufferedWriter(fw);
 	        
-	        //bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"indice_risco\",\"classe_risco\"");
-	        bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"");
+	        bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"dias_de_secura\",\"indice_risco\",\"classe_risco\"");
+	        //bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"");
 	        bw.newLine();
 	        for(int i=0;i<tabela.size();i++){
 	        	for(int j=0; j<tabela.get(i).size(); j++) {
@@ -188,7 +188,7 @@ public class RF {
 	public static void main (String[] args) {
 		
 		String pasta = System.getProperty("user.dir") + "\\src\\resources\\";
-		String arquivo = "treinamento_tb_amostras_final_201908251648.csv";
+		String arquivo = "validacao_tb_amostras_final_201908251648.csv";
 		
 		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(pasta+arquivo, 1, 5);
 		
@@ -199,8 +199,9 @@ public class RF {
 			try {
 				double risco_observado = calcular_risco_observado(i, tabela, Vegetacao.SAVANA_CAATINGA_ABERTA);
 				
-				//tabela.get(i).add(Double.toString(risco_observado));
+				
 				tabela.get(i).add(Double.toString(get_pse(i, tabela)));
+				//tabela.get(i).add(Double.toString(risco_observado));
 				tabela.get(i).add(classificar_rf_indexado(risco_observado));
 				
 			} catch (Exception e) {
@@ -253,22 +254,22 @@ public class RF {
 		// segunda passagem (normalização)
 		for(ArrayList<String> item : tabela) {
 			
-			// normalizar precipitação: 0mm a 100mm
+			// normalizar precipitação
 			double prec = (Double.parseDouble(item.get(0))-menor[0])/(maior[0]-menor[0]);
 			
 			item.set(0, Double.toString(prec));
 			
-			// normalizar temperatura: 0°C a 50°C
+			// normalizar temperatura
 			double temp = (Double.parseDouble(item.get(1))-menor[1])/(maior[1]-menor[1]);
 			
 			item.set(1, Double.toString(temp));
 			
-			// normalizar umidade: 0% a 100%
+			// normalizar umidade
 			double umid = (Double.parseDouble(item.get(2))-menor[2])/(maior[2]-menor[2]);
 			
 			item.set(2, Double.toString(umid));
 			
-			// normalizar umidade: 0% a 100%
+			// normalizar dias de secura
 			double pse = (Double.parseDouble(item.get(3))-menor[3])/(maior[3]-menor[3]);
 			
 			item.set(3, Double.toString(pse));
