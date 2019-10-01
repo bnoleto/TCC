@@ -1,20 +1,24 @@
 package estatisticas.analise_grafico;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
 public class AnalisarGrafico {
 	
-	public static void get_menor_valor(String nome_rede, Stats stats, Dataset dataset) throws IOException, ClassNotFoundException {
+	private ArrayList<ArrayList<Double[]>> dados;
+	
+	public AnalisarGrafico(String nome_rede) throws IOException, ClassNotFoundException {
 		
 		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
         ObjectInputStream ois = new ObjectInputStream(fis);
-        ArrayList<ArrayList<Double[]>> dados = (ArrayList<ArrayList<Double[]>>) ois.readObject();
+        dados = (ArrayList<ArrayList<Double[]>>) ois.readObject();
         ois.close();
-		
+	}
+	
+	public void get_menor_valor(Stats stats, Dataset dataset) throws IOException, ClassNotFoundException {
+
 		double menor_valor = dados.get(dataset.ordinal()).get(0)[stats.ordinal()];
 		int epoca = 0;
 		
@@ -32,12 +36,32 @@ public class AnalisarGrafico {
 		
 	}
 	
-	public static void get_maior_valor(String nome_rede, Stats stats, Dataset dataset) throws IOException, ClassNotFoundException {
+	public int get_epoca_menor_loss_validacao() throws IOException, ClassNotFoundException {
 		
-		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        ArrayList<ArrayList<Double[]>> dados = (ArrayList<ArrayList<Double[]>>) ois.readObject();
-        ois.close();
+		Dataset dataset = Dataset.VALIDACAO;
+		Stats stats = Stats.LOSS;
+		
+		double menor_valor = dados.get(dataset.ordinal()).get(0)[stats.ordinal()];
+		int epoca = 0;
+		
+		for(int i = 1; i < dados.get(dataset.ordinal()).size(); i++) {
+			
+			if(dados.get(dataset.ordinal()).get(i)[stats.ordinal()] <= menor_valor) {
+				menor_valor = dados.get(dataset.ordinal()).get(i)[stats.ordinal()];
+				epoca = i;
+			}
+		}
+		
+		return epoca;
+	}
+	
+	public int get_qtd_epocas() {
+		
+		return dados.get(0).size();
+		
+	}
+	
+	public void get_maior_valor(Stats stats, Dataset dataset) throws IOException, ClassNotFoundException {
 		
 		double maior_valor = dados.get(dataset.ordinal()).get(0)[stats.ordinal()];
 		int epoca = 0;
@@ -56,12 +80,7 @@ public class AnalisarGrafico {
 		
 	}
 	
-	public static void get_info_epoca(String nome_rede, int epoca) throws IOException, ClassNotFoundException {
-		
-		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        ArrayList<ArrayList<Double[]>> dados = (ArrayList<ArrayList<Double[]>>) ois.readObject();
-        ois.close();
+	public void get_info_epoca(int epoca) throws IOException, ClassNotFoundException {
 		
 		System.out.println("ÉPOCA " + epoca);
 		
@@ -79,16 +98,18 @@ public class AnalisarGrafico {
 		
 	}
 	
-	public static double get_stat_epoca(String nome_rede, int epoca, Dataset dataset,Stats stats) throws IOException, ClassNotFoundException {
+	public double get_stat_epoca(int epoca, Dataset dataset,Stats stats) throws IOException, ClassNotFoundException {
+
+		return dados.get(dataset.ordinal()).get(epoca)[stats.ordinal()];
+		
+	}
+
+	public void set_rede(String nome_rede) throws IOException, ClassNotFoundException {
 		
 		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
         ObjectInputStream ois = new ObjectInputStream(fis);
-        ArrayList<ArrayList<Double[]>> dados = (ArrayList<ArrayList<Double[]>>) ois.readObject();
+        dados = (ArrayList<ArrayList<Double[]>>) ois.readObject();
         ois.close();
-		
-		epoca = epoca - 1;
-		
-		return dados.get(dataset.ordinal()).get(epoca)[stats.ordinal()];
 		
 	}
 
