@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.datavec.api.records.reader.RecordReader;
@@ -32,15 +33,19 @@ import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import estatisticas.NoletoGrafico;
+import preprocessamento.calculo_risco_fogo.RF;
 import utils.Horario;
 
 public class Treinamento {
 	
-	private static int numSaidas;
+	private static int numSaidas = 5;
+	private static int numEntradas = 4;
+	private static int numNosOcultos = 5;
+	private static int maxCamadasOcultas = 4;
 	
-	public static ArrayList<Double[]> ArrayListNomeado(String nome){
+	public static ArrayList<ArrayList<Double[]>> ArrayListNomeado(String nome){
 		
-		return new ArrayList<Double[]>() {
+		return new ArrayList<ArrayList<Double[]>>() {
 
 			private static final long serialVersionUID = 1L;
 
@@ -56,21 +61,14 @@ public class Treinamento {
 		
 		int seed = 154;
     	double taxa_aprendizado = 0.1;
-    	
-    	int numEntradas = 4;
-    	
-    	numSaidas = 5;
-        
-        int numNosOcultos = 5;
-        int maxCamadasOcultas = 4;
-    	
+
     	String nome_rede = Horario.getDiaHora();
     	
     	// dados para serem adicionados ao gráfico ao final
-    	ArrayList<ArrayList<Double[]>> dados = new ArrayList<ArrayList<Double[]>>();
+    	ArrayList<ArrayList<ArrayList<Double[]>>> dados = new ArrayList<ArrayList<ArrayList<Double[]>>>();
     	
     	dados.add(ArrayListNomeado("Dataset de Treinamento"));
-    	dados.add(ArrayListNomeado("Dataset de Teste"));
+    	dados.add(ArrayListNomeado("Dataset de Validação"));
 
         // parte inicial da rede
         ListBuilder b1 = new NeuralNetConfiguration.Builder()
@@ -125,37 +123,37 @@ public class Treinamento {
 		
 		MultiLayerNetwork model = MultiLayerNetwork.load(new File(System.getProperty("user.dir")+"\\redes\\"+nome_rede+"\\","rede.nn"), true);
     	
-		numSaidas = 5;
+		
 		
     	FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
         ObjectInputStream ois = new ObjectInputStream(fis);
-        ArrayList<ArrayList<Double[]>> dados = (ArrayList<ArrayList<Double[]>>) ois.readObject();
+        ArrayList<ArrayList<ArrayList<Double[]>>> dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
         ois.close();
         
         treinamento(model,qtd_epocas,nome_rede,dados);
         
 	}
 	
-	private static void treinamento(MultiLayerNetwork model, int nEpochs, String nome_rede, ArrayList<ArrayList<Double[]>> dados) throws IOException, InterruptedException {
+	private static void treinamento(MultiLayerNetwork model, int nEpochs, String nome_rede, ArrayList<ArrayList<ArrayList<Double[]>>> dados) throws IOException, InterruptedException {
 		
-		ArrayList<Double[]> stats_treinamento = dados.get(0);
-		ArrayList<Double[]> stats_teste = dados.get(1);
+		ArrayList<ArrayList<Double[]>> stats_treinamento = dados.get(0);
+		ArrayList<ArrayList<Double[]>> stats_teste = dados.get(1);
 		
-		String diretorio_dataset = System.getProperty("user.dir") + "\\src\\resources\\" ;
-		
-		int batchSize = 4492;
-
 		File dir = new File(System.getProperty("user.dir") + "\\redes\\" +nome_rede+"\\");
         dir.mkdirs();
         
-        RecordReader rrTest = new CSVRecordReader(1, ',');
-        rrTest.initialize(new FileSplit(new File(diretorio_dataset,"normalizado_validacao_tb_amostras_final_201908251648.csv")));
-        DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,4,5);
+        FileSplit[] dataset = dividir_dataset("normalizado\\tb_amostras_final_201908251648.csv", 0.75);
         
-        RecordReader rr = new CSVRecordReader(1, ',');
-        rr.initialize(new FileSplit(new File(diretorio_dataset,"normalizado_treinamento_tb_amostras_final_201908251648.csv")));
-        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,4,5);
+        int batchSize = (int) dataset[0].length();
         
+        RecordReader rr = new CSVRecordReader(0, ',');
+        rr.initialize(dataset[0]);
+        DataSetIterator trainIter = new RecordReaderDataSetIterator(rr,batchSize,numEntradas,numSaidas);
+        
+        RecordReader rrTest = new CSVRecordReader(0, ',');
+        rrTest.initialize(dataset[1]);
+        DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,numEntradas,numSaidas);
+
         double menor_loss = 0;
         boolean overfitting = false;
         
@@ -167,15 +165,51 @@ public class Treinamento {
             // Estatísicas com o dataset de treinamento
             Evaluation eval = model.evaluate(trainIter);
             System.out.println(eval.stats());
-            System.out.println("*** Fim da Época " + i + "/" + nEpochs +" ***" );
+            System.out.println("*** Fim da Época " + i + "/" + (nEpochs-1) +" ***" );
             DataSetLossCalculator lc = new DataSetLossCalculator(trainIter, true);
-            stats_treinamento.add(new Double[] {eval.accuracy(),eval.precision(),eval.recall(),eval.f1(),lc.calculateScore(model)});
+            
+            Double[] overall_tr = new Double[] {eval.accuracy(),eval.precision(),eval.recall(),eval.f1(),lc.calculateScore(model)};
+            Double[][] tr_classes = new Double[][] { 
+            	new Double[] {eval.precision(0),eval.recall(0),eval.f1(0)},
+            	new Double[] {eval.precision(1),eval.recall(1),eval.f1(1)},
+            	new Double[] {eval.precision(2),eval.recall(2),eval.f1(2)},
+            	new Double[] {eval.precision(3),eval.recall(3),eval.f1(3)},
+            	new Double[] {eval.precision(4),eval.recall(4),eval.f1(4)},
+            	};
+            
+            ArrayList<Double[]>stat_tr = new ArrayList<Double[]>();
+            stat_tr.add(overall_tr);
+            stat_tr.add(tr_classes[0]);
+            stat_tr.add(tr_classes[1]);
+            stat_tr.add(tr_classes[2]);
+            stat_tr.add(tr_classes[3]);
+            stat_tr.add(tr_classes[4]);
+            
+            stats_treinamento.add(stat_tr);
             trainIter.reset();
             
             // Guardará estatísicas com o dataset de teste
             Evaluation evalTeste = model.evaluate(testIter);
             lc = new DataSetLossCalculator(testIter, true);
-            stats_teste.add(new Double[] {evalTeste.accuracy(),evalTeste.precision(),evalTeste.recall(),evalTeste.f1(),lc.calculateScore(model)});
+            
+            Double[] overall_val = new Double[] {evalTeste.accuracy(),evalTeste.precision(),evalTeste.recall(),evalTeste.f1(),lc.calculateScore(model)};
+            Double[][] val_classes = new Double[][] { 
+            	new Double[] {evalTeste.precision(0),evalTeste.recall(0),evalTeste.f1(0)},
+            	new Double[] {evalTeste.precision(1),evalTeste.recall(1),evalTeste.f1(1)},
+            	new Double[] {evalTeste.precision(2),evalTeste.recall(2),evalTeste.f1(2)},
+            	new Double[] {evalTeste.precision(3),evalTeste.recall(3),evalTeste.f1(3)},
+            	new Double[] {evalTeste.precision(4),evalTeste.recall(4),evalTeste.f1(4)},
+            	};
+            
+            ArrayList<Double[]>stat_val = new ArrayList<Double[]>();
+            stat_val.add(overall_val);
+            stat_val.add(val_classes[0]);
+            stat_val.add(val_classes[1]);
+            stat_val.add(val_classes[2]);
+            stat_val.add(val_classes[3]);
+            stat_val.add(val_classes[4]);
+            
+            stats_teste.add(stat_val);
             
             if(i == 0) {
             	menor_loss = lc.calculateScore(model);
@@ -208,7 +242,7 @@ public class Treinamento {
             testIter.reset();
 
             // salvar a rede a cada 1000 épocas e atualizar gráficos
-            if(i % 1000 == 0 && i != 0) {
+            if((i+1) % 1000 == 0) {
             	
             	System.out.println("Salvando rede...");
             	
@@ -252,5 +286,70 @@ public class Treinamento {
         
         NoletoGrafico.gerarGraficos(dados, dir);
 		
+	}
+
+	private static FileSplit[] dividir_dataset(String arquivo, double razao_treinamento) {
+		
+		String diretorio_dataset = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
+		
+		ArrayList<ArrayList<String>> dataset = RF.csv_to_ArrayList(diretorio_dataset+arquivo, 1);
+		
+		int i_final_treinamento = (int) (razao_treinamento*dataset.size());
+		int i_final_validacao = dataset.size()-1;
+		
+		List<ArrayList<String>> treinamento = dataset.subList(0, i_final_treinamento+1);
+		
+		treinamento = balancear(treinamento);
+		
+		List<ArrayList<String>> validacao = dataset.subList(i_final_treinamento+1, i_final_validacao+1);
+
+        FileSplit fs_treinamento = new FileSplit(RF.arrayList_to_CSV(treinamento));
+        FileSplit fs_validacao = new FileSplit(RF.arrayList_to_CSV(validacao));
+		
+		return new FileSplit[] {fs_treinamento,fs_validacao};
+	}
+
+	private static List<ArrayList<String>> balancear(List<ArrayList<String>> treinamento) {
+				
+		ArrayList<List<ArrayList<String>>> classes = new ArrayList<List<ArrayList<String>>>();
+		
+		classes.add(new ArrayList<ArrayList<String>>());
+		classes.add(new ArrayList<ArrayList<String>>());
+		classes.add(new ArrayList<ArrayList<String>>());
+		classes.add(new ArrayList<ArrayList<String>>());
+		classes.add(new ArrayList<ArrayList<String>>());
+		
+		for(ArrayList<String> amostra : treinamento) {
+			if(amostra.get(4).equals("0")) {
+				classes.get(0).add(amostra);
+			} else if(amostra.get(4).equals("1")) {
+				classes.get(1).add(amostra);
+			} else if(amostra.get(4).equals("2")) {
+				classes.get(2).add(amostra);
+			} else if(amostra.get(4).equals("3")) {
+				classes.get(3).add(amostra);
+			} else if(amostra.get(4).equals("4")) {
+				classes.get(4).add(amostra);
+			}
+		}
+		
+		int min = classes.get(0).size();
+		
+		List<ArrayList<String>> nova_list = new ArrayList<ArrayList<String>>();
+		
+		for(int i = 1; i < 5; i++) {
+			if(classes.get(i).size() < min) {
+				min = classes.get(i).size();
+			}
+		}
+		
+		for(int i = 0; i<5; i++) {
+			for(int j = 0; j < min; j++) {
+				nova_list.add(classes.get(i).get(j));
+			}
+		}
+		
+		return nova_list;
+
 	}
 }

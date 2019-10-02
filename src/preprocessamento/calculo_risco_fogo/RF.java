@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class RF {
 	
@@ -33,6 +34,43 @@ public class RF {
 			return 6.0;
 		}
 		return -1;
+	}
+	
+	public static ArrayList<ArrayList<String>> csv_to_ArrayList (String arquivo, int saltar_linhas){
+		
+		String linha = "";
+		
+		ArrayList<ArrayList<String>> tabela = new ArrayList<ArrayList<String>>();
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(arquivo))) {
+
+			for(int i = 0; i < saltar_linhas; i++) {
+				br.readLine();
+			}
+			
+	        while ((linha = br.readLine()) != null) {
+	        	
+	        	ArrayList<String> lst_linha = new ArrayList<String>();
+	        	
+	            // use comma as separator
+		        String[] coluna = linha.split(",");
+		        
+		        try {
+		        	for (int i = 0; coluna[i] != null; i++) {
+			        	lst_linha.add(coluna[i]);
+			        }	
+		        } catch(ArrayIndexOutOfBoundsException e) {
+		        	
+		        }
+
+		        tabela.add(lst_linha);
+	        }
+		
+		} catch (IOException e) {
+		    e.printStackTrace();
+		}
+		
+		return tabela;
 	}
 	
 	private static ArrayList<ArrayList<String>> csv_to_ArrayList (String arquivo, int saltar_linhas, int limite_coluna){
@@ -111,10 +149,10 @@ public class RF {
 		
 		double rf_basico;
 		
-		if(pse > 0.9) {
+		rf_basico = (0.9*(1+Math.sin(((vegetacao(vegeta)*pse)-90)*(3.14/180))))/2;
+		
+		if(rf_basico > 0.9) {
 			rf_basico = 0.9;
-		} else {
-			rf_basico = (0.9*(1+Math.sin(((vegetacao(vegeta)*pse)-90)*(3.14/180))))/2;
 		}
 		
 		double fu = (Double.parseDouble(dia_corrente.get(3))*-0.006)+1.3;
@@ -166,8 +204,8 @@ public class RF {
 	        FileWriter fw = new FileWriter(file);
 	        BufferedWriter bw = new BufferedWriter(fw);
 	        
-	        bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"dias_de_secura\",\"indice_risco\",\"classe_risco\"");
-	        //bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"");
+	        //bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"dias_de_secura\",\"indice_risco\",\"classe_risco\"");
+	        bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"");
 	        bw.newLine();
 	        for(int i=0;i<tabela.size();i++){
 	        	for(int j=0; j<tabela.get(i).size(); j++) {
@@ -184,11 +222,38 @@ public class RF {
 			e.printStackTrace();
 		}
 	}
+	
+	public static File arrayList_to_CSV(List<ArrayList<String>> tabela) {
+		
+		try {
+		
+			File temp = File.createTempFile("tempdata", ".tmp");
+			
+	        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+	        
+	        for(int i=0;i<tabela.size();i++){
+	        	for(int j=0; j<tabela.get(i).size(); j++) {
+	        		bw.write(tabela.get(i).get(j));
+	        		if(j != tabela.get(i).size()-1) {
+	        			bw.write(",");
+	        		}
+	        	}
+	            bw.newLine();
+	        }
+	        bw.close();
+	        
+	        return temp;
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 
 	public static void main (String[] args) {
 		
-		String pasta = System.getProperty("user.dir") + "\\src\\resources\\";
-		String arquivo = "validacao_tb_amostras_final_201908251648.csv";
+		String pasta = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
+		String arquivo = "tb_amostras_final_201908251648.csv";
 		
 		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(pasta+arquivo, 1, 5);
 		
@@ -222,7 +287,7 @@ public class RF {
 		
 		normalizar(tabela);
 		
-		salvarCSV(pasta+"normalizado_"+arquivo, tabela);
+		salvarCSV(pasta+"normalizado\\"+arquivo, tabela);
 		
 	}
 
