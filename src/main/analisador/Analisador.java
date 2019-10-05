@@ -37,6 +37,8 @@ import javax.swing.SwingConstants;
 import java.awt.Font;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
+
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeListener;
@@ -256,7 +258,10 @@ public class Analisador {
 				
 				
 				combo_selecao_rede.setModel(new DefaultComboBoxModel<String>(findFoldersInDirectory(System.getProperty("user.dir")+"\\redes\\")));
-				arquivo = new AnalisarGrafico(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()));
+				
+				arquivo = new CarregarModelo(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())).get_modelo();
+				
+				frmAnliseDosGrficos.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				
 				JLabel label_epoca_menor_loss_1 = new JLabel("\u00C9poca com menor LOSS na valida\u00E7\u00E3o: ");
 				label_epoca_menor_loss_1.setName("label_epoca_menor_loss");
@@ -323,8 +328,12 @@ public class Analisador {
 						}
 						
 						try {
+							
+							frmAnliseDosGrficos.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 							arquivo.set_rede(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()));
+							
+							frmAnliseDosGrficos.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 							
 							int menor_loss_epoca = arquivo.get_epoca_menor_loss_validacao();
 							

@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
+import main.analisador.CarregarModelo;
+
 public class AnalisarGrafico {
 	
 	private ArrayList<ArrayList<ArrayList<Double[]>>> dados;
@@ -106,10 +108,7 @@ public class AnalisarGrafico {
 
 	public void set_rede(String nome_rede) throws IOException, ClassNotFoundException {
 		
-		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
-        ois.close();
+		dados = new CarregarModelo(nome_rede).get_modelo().dados;
 		
 	}
 

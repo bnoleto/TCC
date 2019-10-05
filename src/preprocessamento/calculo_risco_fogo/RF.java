@@ -6,10 +6,97 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
+
+import preprocessamento.PreProcessadorCSV;
 
 public class RF {
+	
+	public static void main (String[] args) throws ParseException {
+		
+		String pasta = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
+		String arquivo = "filtrado_amostras_imperatriz_inmet.csv";
+		
+		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(pasta+arquivo, 1);
+		
+		Calendar data_inicial = Calendar.getInstance();
+		Calendar data_final = Calendar.getInstance();
+		
+		data_inicial.set(1900, Calendar.JANUARY, 1);
+		data_final.set(2018, Calendar.DECEMBER, 31);
+		
+
+		ArrayList<ArrayList<String>> lista_remover = new ArrayList<ArrayList<String>>();
+		
+		
+		for(int i = 0; i < tabela.size(); i++) {
+
+			try {
+				
+				double pse = get_pse(i, tabela);
+				
+				double risco_observado = calcular_risco_observado(pse, tabela, i,Vegetacao.SAVANA_CAATINGA_ABERTA);
+				
+				System.out.println(((double)i/tabela.size()*100) + "% (" + (i+1) +"/"+tabela.size()+")");
+				
+				
+				tabela.get(i).add(Double.toString(pse));
+				tabela.get(i).add(Double.toString(risco_observado));
+				tabela.get(i).add(classificar_rf_indexado(risco_observado));
+				
+				
+			} catch (Exception e) {
+				lista_remover.add(tabela.get(i));
+			}
+
+		}
+		
+		
+		
+		
+		// irá remover do CSV final os registros em que não foi possível classificar o risco
+		for(ArrayList<String> registro : lista_remover) {
+			tabela.remove(registro);
+		}
+		/*
+		Calendar data_inicial = Calendar.getInstance();
+		Calendar data_final = Calendar.getInstance();
+		
+		data_inicial.set(1900, 1, 1);
+		data_final.set(2019, 12, 31);
+		*/
+		
+		tabela = PreProcessadorCSV.filtrar_por_data_string(data_inicial, data_final, tabela);
+		
+		System.out.println(tabela.size());
+		
+		
+		
+		salvarCSV("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"indice_risco\",\"classe_risco\"",
+				pasta+"\\nao_normalizado\\"+arquivo, tabela);
+		
+		
+		for(int i = 0; i < tabela.size(); i++) {
+			
+			tabela.get(i).remove(5); // remove risco (double)
+			tabela.get(i).remove(0); // remove data
+			
+		}
+		
+		normalizar(tabela);
+		
+		show_classes(tabela);
+		
+		salvarCSV("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"",
+				pasta+"\\normalizado\\"+arquivo, tabela);
+		
+	}
 	
 	private static double vegetacao(Vegetacao vegeta) {
 		if(vegeta == Vegetacao.OMBROFILA_DENSA_ALAGADOS) {
@@ -55,44 +142,7 @@ public class RF {
 	            // use comma as separator
 		        String[] coluna = linha.split(",");
 		        
-		        try {
-		        	for (int i = 0; coluna[i] != null; i++) {
-			        	lst_linha.add(coluna[i]);
-			        }	
-		        } catch(ArrayIndexOutOfBoundsException e) {
-		        	
-		        }
-
-		        tabela.add(lst_linha);
-	        }
-		
-		} catch (IOException e) {
-		    e.printStackTrace();
-		}
-		
-		return tabela;
-	}
-	
-	private static ArrayList<ArrayList<String>> csv_to_ArrayList (String arquivo, int saltar_linhas, int limite_coluna){
-		
-		String linha = "";
-		
-		ArrayList<ArrayList<String>> tabela = new ArrayList<ArrayList<String>>();
-		
-		try (BufferedReader br = new BufferedReader(new FileReader(arquivo))) {
-
-			for(int i = 0; i < saltar_linhas; i++) {
-				br.readLine();
-			}
-			
-	        while ((linha = br.readLine()) != null) {
-	        	
-	        	ArrayList<String> lst_linha = new ArrayList<String>();
-	        	
-	            // use comma as separator
-		        String[] coluna = linha.split(",");
-		        
-		        for(int i = 0; i < limite_coluna; i++) {
+		        for(int i = 0; i < coluna.length; i++) {
 		        	lst_linha.add(coluna[i]);
 		        }
 		        tabela.add(lst_linha);
@@ -105,16 +155,33 @@ public class RF {
 		return tabela;
 	}
 	
-	private static double get_soma_precipitacao(int qtd_dias, int i_atual, ArrayList<ArrayList<String>> tabela) {
+	private static double get_soma_precipitacao(int qtd_dias, int i_atual, ArrayList<ArrayList<String>> tabela) throws ParseException {
+		
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		Date data = formatter.parse(tabela.get(i_atual).get(0));
+		
+		
+		Calendar data_final = Calendar.getInstance();
+		data_final.setTimeInMillis(data.getTime());
+		data_final.add(Calendar.DAY_OF_MONTH, -1);
+		
+		Calendar data_inicial = Calendar.getInstance();
+		data_inicial.setTime(data_final.getTime());
+		data_inicial.add(Calendar.DAY_OF_MONTH, -qtd_dias);
+		
+		ArrayList<ArrayList<String>> amostras_validas = PreProcessadorCSV.filtrar_por_data_string(data_inicial, data_final, tabela);
+		
+		
+		
 		double soma = 0;
-		for(int dia = 1; dia <= qtd_dias; dia++) {
-			soma += Double.parseDouble(tabela.get(i_atual-dia).get(1));
+		for(int i = 0; i < amostras_validas.size(); i++) {
+			soma += Double.parseDouble(amostras_validas.get(i).get(1));
 		}
 		
 		return soma;
 	}
 	
-	private static double get_pse(int i, ArrayList<ArrayList<String>> tabela) {
+	private static double get_pse(int i, ArrayList<ArrayList<String>> tabela) throws ParseException {
 		double prec1 = get_soma_precipitacao(1, i, tabela);		
 		double prec2 = get_soma_precipitacao(2, i, tabela);	
 		double prec3 = get_soma_precipitacao(3, i, tabela);
@@ -142,10 +209,8 @@ public class RF {
 		return 105*fp1*fp2*fp3*fp4*fp5*fp6a10*fp11a15*fp16a30*fp31a60*fp61a90*fp91a120;
 	}
 	
-	private static double calcular_risco_observado(int i, ArrayList<ArrayList<String>> tabela, Vegetacao vegeta) throws ArrayIndexOutOfBoundsException {
+	private static double calcular_risco_observado(double pse, ArrayList<ArrayList<String>> tabela, int i,Vegetacao vegeta) throws ArrayIndexOutOfBoundsException, ParseException {
 		ArrayList<String> dia_corrente = tabela.get(i);
-		
-		double pse = get_pse(i, tabela);
 		
 		double rf_basico;
 		
@@ -164,6 +229,8 @@ public class RF {
 		if(rf_observado < 0.01) {
 			return 0;
 		}
+		
+		
 		
 		return rf_observado;
 	}
@@ -196,7 +263,7 @@ public class RF {
 		}
 	}
 	
-	private static void salvarCSV(String arquivo, ArrayList<ArrayList<String>> tabela) {
+	private static void salvarCSV(String colunas, String arquivo, ArrayList<ArrayList<String>> tabela) {
 		
 		try {
 		
@@ -204,8 +271,7 @@ public class RF {
 	        FileWriter fw = new FileWriter(file);
 	        BufferedWriter bw = new BufferedWriter(fw);
 	        
-	        //bw.write("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"houve_incendio\",\"dias_de_secura\",\"indice_risco\",\"classe_risco\"");
-	        bw.write("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"");
+	        bw.write(colunas);
 	        bw.newLine();
 	        for(int i=0;i<tabela.size();i++){
 	        	for(int j=0; j<tabela.get(i).size(); j++) {
@@ -250,47 +316,74 @@ public class RF {
 		return null;
 	}
 
-	public static void main (String[] args) {
+	public static void show_classes(List<ArrayList<String>> tabela) {
+		int classe0 = 0;
+		int classe1 = 0;
+		int classe2 = 0;
+		int classe3 = 0;
+		int classe4 = 0;
 		
-		String pasta = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
-		String arquivo = "tb_amostras_final_201908251648.csv";
 		
-		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(pasta+arquivo, 1, 5);
-		
-		ArrayList<ArrayList<String>> lista_remover = new ArrayList<ArrayList<String>>();
-		
-		for(int i = 0; i < tabela.size(); i++) {
-
-			try {
-				double risco_observado = calcular_risco_observado(i, tabela, Vegetacao.SAVANA_CAATINGA_ABERTA);
-				
-				
-				tabela.get(i).add(Double.toString(get_pse(i, tabela)));
-				//tabela.get(i).add(Double.toString(risco_observado));
-				tabela.get(i).add(classificar_rf_indexado(risco_observado));
-				
-			} catch (Exception e) {
-				lista_remover.add(tabela.get(i));
+		for(ArrayList<String> amostra : tabela) {
+			
+			
+			if(amostra.get(4).equals("0")) {
+				classe0++;
+			} else if(amostra.get(4).equals("1")) {
+				classe1++;
+			} else if(amostra.get(4).equals("2")) {
+				classe2++;
+			} else if(amostra.get(4).equals("3")) {
+				classe3++;
+			} else if(amostra.get(4).equals("4")) {
+				classe4++;
 			}
-
+			
 		}
 		
-		for(int i = 0; i < tabela.size(); i++) {
-			tabela.get(i).remove(0); // remove data
-			tabela.get(i).remove(3); // remove boolean de existencia de incendio
-		}
-		
-		// irá remover do CSV final os registros em que não foi possível classificar o risco
-		for(ArrayList<String> registro : lista_remover) {
-			tabela.remove(registro);
-		}
-		
-		normalizar(tabela);
-		
-		salvarCSV(pasta+"normalizado\\"+arquivo, tabela);
+		System.out.println("=== contagem de classes ===");
+		System.out.println("0: " + classe0 + " amostras");
+		System.out.println("1: " + classe1 + " amostras");
+		System.out.println("2: " + classe2 + " amostras");
+		System.out.println("3: " + classe3 + " amostras");
+		System.out.println("4: " + classe4 + " amostras");
 		
 	}
+	
 
+	public static void show_classes(ArrayList<ArrayList<String>> tabela) {
+		int classe0 = 0;
+		int classe1 = 0;
+		int classe2 = 0;
+		int classe3 = 0;
+		int classe4 = 0;
+		
+		
+		for(ArrayList<String> amostra : tabela) {
+			
+			
+			if(amostra.get(4).equals("0")) {
+				classe0++;
+			} else if(amostra.get(4).equals("1")) {
+				classe1++;
+			} else if(amostra.get(4).equals("2")) {
+				classe2++;
+			} else if(amostra.get(4).equals("3")) {
+				classe3++;
+			} else if(amostra.get(4).equals("4")) {
+				classe4++;
+			}
+			
+		}
+		
+		System.out.println("=== contagem de classes ===");
+		System.out.println("0: " + classe0 + " amostras");
+		System.out.println("1: " + classe1 + " amostras");
+		System.out.println("2: " + classe2 + " amostras");
+		System.out.println("3: " + classe3 + " amostras");
+		System.out.println("4: " + classe4 + " amostras");
+		
+	}
 	private static void normalizar(ArrayList<ArrayList<String>> tabela) {
 		
 		double[] menor = new double[tabela.size()-1];

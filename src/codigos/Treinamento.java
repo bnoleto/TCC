@@ -2,12 +2,14 @@ package codigos;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -33,6 +35,7 @@ import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import estatisticas.NoletoGrafico;
+import preprocessamento.PreProcessadorCSV;
 import preprocessamento.calculo_risco_fogo.RF;
 import utils.Horario;
 
@@ -115,35 +118,74 @@ public class Treinamento {
     	
     	FileUtils.writeStringToFile(new File(System.getProperty("user.dir")+"\\redes\\"+nome_rede+"\\","config.json"), conf.toJson(), Charset.forName("UTF-8"));
     	
-    	treinamento(model, qtd_epocas, nome_rede, dados);
+    	FileSplit[] dataset = iniciar_dataset(nome_rede);
+    	
+    	treinamento(model, dataset, qtd_epocas, nome_rede, dados);
 
 	}
 	
+	private static FileSplit[] iniciar_dataset(String nome_rede) throws IOException {
+		
+		FileSplit[] dataset = dividir_dataset("normalizado\\filtrado_amostras_imperatriz_inmet.csv",nome_rede, 0.75);
+
+		return dataset;
+	}
+	
+	private static FileSplit[] abrir_dataset(String nome_rede) throws IOException, ClassNotFoundException {
+        
+		ArrayList<List<ArrayList<String>>> dataset = abrir_objeto(nome_rede, "dataset");
+
+        FileSplit fs_treinamento = new FileSplit(RF.arrayList_to_CSV(dataset.get(0)));
+        FileSplit fs_validacao = new FileSplit(RF.arrayList_to_CSV(dataset.get(1)));
+		
+		return new FileSplit[] {fs_treinamento,fs_validacao};
+
+	}
+	
+	private static void salvar_objeto(ArrayList<List<ArrayList<String>>> objeto, String nome_rede,String nome_arquivo) throws IOException {
+		FileOutputStream fos = new FileOutputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\"+nome_arquivo);
+        ObjectOutputStream oos = new ObjectOutputStream(fos);
+        oos.writeObject(objeto);
+        oos.close();
+	}
+	
+	private static ArrayList<List<ArrayList<String>>> abrir_objeto(String nome_rede,String nome_arquivo) throws IOException, ClassNotFoundException {
+        
+		System.out.println(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\"+nome_arquivo);
+		
+        FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\"+nome_arquivo);
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        ArrayList<List<ArrayList<String>>> objeto = (ArrayList<List<ArrayList<String>>>) ois.readObject();
+        ois.close();
+        
+        return objeto;
+	}
+
+
 	public static void continuar_treinamento(String nome_rede, int qtd_epocas) throws IOException, ClassNotFoundException, InterruptedException {
 		
 		MultiLayerNetwork model = MultiLayerNetwork.load(new File(System.getProperty("user.dir")+"\\redes\\"+nome_rede+"\\","rede.nn"), true);
-    	
-		
 		
     	FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
         ObjectInputStream ois = new ObjectInputStream(fis);
         ArrayList<ArrayList<ArrayList<Double[]>>> dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
         ois.close();
         
-        treinamento(model,qtd_epocas,nome_rede,dados);
+        FileSplit[] dataset = abrir_dataset(nome_rede);
         
+        treinamento(model,dataset,qtd_epocas,nome_rede,dados);
+
 	}
 	
-	private static void treinamento(MultiLayerNetwork model, int nEpochs, String nome_rede, ArrayList<ArrayList<ArrayList<Double[]>>> dados) throws IOException, InterruptedException {
+
+	private static void treinamento(MultiLayerNetwork model, FileSplit[] dataset, int nEpochs, String nome_rede, ArrayList<ArrayList<ArrayList<Double[]>>> dados) throws IOException, InterruptedException {
 		
 		ArrayList<ArrayList<Double[]>> stats_treinamento = dados.get(0);
 		ArrayList<ArrayList<Double[]>> stats_teste = dados.get(1);
 		
 		File dir = new File(System.getProperty("user.dir") + "\\redes\\" +nome_rede+"\\");
         dir.mkdirs();
-        
-        FileSplit[] dataset = dividir_dataset("normalizado\\tb_amostras_final_201908251648.csv", 0.75);
-        
+
         int batchSize = (int) dataset[0].length();
         
         RecordReader rr = new CSVRecordReader(0, ',');
@@ -288,7 +330,7 @@ public class Treinamento {
 		
 	}
 
-	private static FileSplit[] dividir_dataset(String arquivo, double razao_treinamento) {
+	private static FileSplit[] dividir_dataset(String arquivo, String nome_rede, double razao_treinamento) throws IOException {
 		
 		String diretorio_dataset = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
 		
@@ -299,15 +341,28 @@ public class Treinamento {
 		
 		List<ArrayList<String>> treinamento = dataset.subList(0, i_final_treinamento+1);
 		
+		System.out.println(dataset.get((int) ((razao_treinamento*dataset.size())-10)));
+		
+		Collections.shuffle(treinamento);
+		
 		treinamento = balancear(treinamento);
 		
+		System.out.println(dataset.get((int) ((razao_treinamento*dataset.size())-10)));
+		
 		List<ArrayList<String>> validacao = dataset.subList(i_final_treinamento+1, i_final_validacao+1);
+		
+		
+		ArrayList<List<ArrayList<String>>> conjunto = new ArrayList<List<ArrayList<String>>>();
+        
+        salvar_objeto(conjunto, nome_rede, "dataset");
 
         FileSplit fs_treinamento = new FileSplit(RF.arrayList_to_CSV(treinamento));
         FileSplit fs_validacao = new FileSplit(RF.arrayList_to_CSV(validacao));
 		
 		return new FileSplit[] {fs_treinamento,fs_validacao};
 	}
+	
+	
 
 	private static List<ArrayList<String>> balancear(List<ArrayList<String>> treinamento) {
 				
