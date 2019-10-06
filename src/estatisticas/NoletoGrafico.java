@@ -45,7 +45,10 @@ public class NoletoGrafico {
 		
 	}
 
-	public static void gerarGraficos(ArrayList<ArrayList<ArrayList<Double[]>>> dados, File dir) throws IOException {
+	public static void gerarGraficos(ArrayList<ArrayList<ArrayList<Double[]>>> dados, File dir2) throws IOException {
+		
+		File dir = new File (dir2.getPath()+"/graficos/");
+		dir.mkdirs();
 		
 		gerarChart(dados, 0, 0,"Treinamento: ACURACIA", "ÉPOCA", "ACURÁCIA", dir+"/acuracia",true);
 		gerarChart(dados, 0, 1,"Treinamento: PRECISAO", "ÉPOCA", "PRECISÃO", dir+"/precisao",true);

@@ -8,8 +8,8 @@ import utils.ModoExecucao;
 public class Saida5Classificada {
 	
 	// iniciar do zero / continuar de onde parou o treinamento / apenas gerar os gr�ficos do arquivo .stats existentes
-	public static ModoExecucao modo = ModoExecucao.CONTINUAR;
-	public static String nome_arquivo = "20191005_2034";
+	public static ModoExecucao modo = ModoExecucao.GERAR_GRAFICOS;
+	public static String nome_arquivo = "20191005_2034-20k";
 	
     public static void main(String[] args) throws Exception {
    

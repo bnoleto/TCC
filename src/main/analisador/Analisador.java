@@ -226,7 +226,7 @@ public class Analisador {
 				JRadioButton rdbtnAcurcia = new JRadioButton("Acurácia");
 				rdbtnAcurcia.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/acuracia.png");
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/graficos/acuracia.png");
 						
 					}
 				});
@@ -237,7 +237,7 @@ public class Analisador {
 				rdbtnPreciso.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
 						
-						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/precisao.png");
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/graficos/precisao.png");
 
 						//grafico.setIcon(new ImageIcon(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/precisao.png"));
 					}
@@ -248,7 +248,7 @@ public class Analisador {
 				JRadioButton rdbtnLoss = new JRadioButton("Loss");
 				rdbtnLoss.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
-						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/loss.png");
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/graficos/loss.png");
 					}
 				});
 				rdbtnLoss.setSelected(true);
@@ -258,7 +258,7 @@ public class Analisador {
 				JRadioButton rdbtnFScore = new JRadioButton("F1 Score");
 				rdbtnFScore.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/f1score.png");
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/graficos/f1score.png");
 					}
 				});
 				bt.add(rdbtnFScore);
@@ -267,7 +267,7 @@ public class Analisador {
 				JRadioButton rdbtnRecall = new JRadioButton("Recall");
 				rdbtnRecall.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/recall.png");
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/graficos/recall.png");
 					}
 				});
 				bt.add(rdbtnRecall);
@@ -374,7 +374,7 @@ public class Analisador {
 						}
 
 						
-						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/"+opcao +".png");
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/graficos/"+opcao +".png");
 					}
 				});
 				
@@ -404,7 +404,7 @@ public class Analisador {
 				});
 				
 				
-				grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/loss.png");
+				grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/graficos/loss.png");
 				
 				GroupLayout gl_panel_dados = new GroupLayout(panel_dados);
 				gl_panel_dados.setHorizontalGroup(
