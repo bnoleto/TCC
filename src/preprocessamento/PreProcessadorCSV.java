@@ -18,6 +18,12 @@ public class PreProcessadorCSV {
 	private static Calendar cal_inicial = Calendar.getInstance();
 	private static Calendar cal_final = Calendar.getInstance();
 	
+	
+	/**
+	 * TentarÃ¡ retornar um objeto genÃ©rico a partir da funÃ§Ã£o parseDouble();
+	 * @param valor String de entrada
+	 * @return {@link Object} se o valor for vÃ¡lido. NULL se for invÃ¡lido.
+	 */
 	private static Object parseDouble (String valor){
 		
 		Object nulo = null;
@@ -34,7 +40,7 @@ public class PreProcessadorCSV {
 		cal_inicial.set(1900, 1, 1);
 		cal_final.set(2020, 12, 31);
 		
-		String pasta = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
+		String pasta = System.getProperty("user.dir") + "/src/resources/datasets/";
 		String arquivo = "amostras_imperatriz_inmet.csv";
 		
 		ArrayList<ArrayList<String>> amostras = csv_to_ArrayList(pasta+arquivo, 1);
@@ -208,11 +214,11 @@ public class PreProcessadorCSV {
 			try {
 				
 			
-				// condição para ter 2 amostras para o mesmo dia
+				// condiï¿½ï¿½o para ter 2 amostras para o mesmo dia
 				if(((Calendar)amostra.get(1)).get(Calendar.DAY_OF_YEAR) == ((Calendar)prox_amostra.get(1)).get(Calendar.DAY_OF_YEAR) &&
 						((Calendar)amostra.get(1)).get(Calendar.YEAR) == ((Calendar)prox_amostra.get(1)).get(Calendar.YEAR)	) {
 				
-					// tentará pegar apenas as amostras das variáveis que serão importantes
+					// tentarï¿½ pegar apenas as amostras das variï¿½veis que serï¿½o importantes
 					
 						if(amostra.get(2) == null || prox_amostra.get(3) == null || prox_amostra.get(8) == null) {
 							throw new NullPointerException();
@@ -232,7 +238,7 @@ public class PreProcessadorCSV {
 		
 	}
 	
-private static void salvarCSV(String arquivo, ArrayList<ArrayList<String>> tabela) {
+	private static void salvarCSV(String arquivo, ArrayList<ArrayList<String>> tabela) {
 		
 		try {
 		
@@ -294,7 +300,15 @@ private static void salvarCSV(String arquivo, ArrayList<ArrayList<String>> tabel
 		
 		return tabela;
 	}
-
+	
+	/**
+	 * IrÃ¡ retornar uma ArrayList apenas com os registros entre as duas datas especificadas, pertencentes Ã  ArrayList inicial.
+	 * @param data_inicial
+	 * @param data_final
+	 * @param amostras
+	 * @return uma nova ArrayList filtrada.
+	 * @throws ParseException
+	 */
 	public static ArrayList<ArrayList<String>> filtrar_por_data_string(Calendar data_inicial, Calendar data_final,
 			ArrayList<ArrayList<String>> amostras) throws ParseException {
 		

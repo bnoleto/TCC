@@ -25,39 +25,39 @@ import org.jfree.graphics2d.svg.SVGUtils;
 public class NoletoGrafico {
 	/*
 	public static void gerarGrafico(ArrayList<ArrayList<ArrayList<Double[]>>> dados, File dir, Stats stat) throws IOException {
-		gerarChart(dados, 0,stat.ordinal(),"Treinamento: "+stat.name().toUpperCase(), "…POCA", stat.name().toUpperCase(), dir+"\\"+stat.toString().toLowerCase(),true);
+		gerarChart(dados, 0,stat.ordinal(),"Treinamento: "+stat.name().toUpperCase(), "ÔøΩPOCA", stat.name().toUpperCase(), dir+"/"+stat.toString().toLowerCase(),true);
 		
-		System.out.println("Gr·fico "+ stat.name()+ " gerado!");
+		System.out.println("GrÔøΩfico "+ stat.name()+ " gerado!");
 	}*/
 	
 	public static void gerarGraficos(String nome_rede) throws IOException, ClassNotFoundException {
 		
-		File dir = new File(System.getProperty("user.dir") + "\\redes\\" +nome_rede+"\\");
+		File dir = new File(System.getProperty("user.dir") + "/redes/" +nome_rede+"/");
     	
-    	FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
+    	FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/redes/"+nome_rede+"/estatisticas.stats");
         ObjectInputStream ois = new ObjectInputStream(fis);
         ArrayList<ArrayList<ArrayList<Double[]>>> dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
         ois.close();
         
         NoletoGrafico.gerarGraficos(dados, dir);
         
-        System.out.println("Gr·ficos gerados!");
+        System.out.println("Gr√°ficos gerados!");
 		
 	}
 
 	public static void gerarGraficos(ArrayList<ArrayList<ArrayList<Double[]>>> dados, File dir) throws IOException {
 		
-		gerarChart(dados, 0, 0,"Treinamento: ACURACIA", "…POCA", "ACURACIA", dir+"\\acuracia",true);
-		gerarChart(dados, 0, 1,"Treinamento: PRECISAO", "…POCA", "PRECISAO", dir+"\\precisao",true);
-		gerarChart(dados, 0, 2,"Treinamento: RECALL", "…POCA", "RECALL", dir+"\\recall",true);
-		gerarChart(dados, 0, 3,"Treinamento: F1 SCORE", "…POCA", "F1 SCORE", dir+"\\f1score",true);
-		gerarChart(dados, 0, 4,"Treinamento: ERRO MEDIO", "…POCA", "ERRO MEDIO", dir+"\\loss",false);
+		gerarChart(dados, 0, 0,"Treinamento: ACURACIA", "√âPOCA", "ACUR√ÅCIA", dir+"/acuracia",true);
+		gerarChart(dados, 0, 1,"Treinamento: PRECISAO", "√âPOCA", "PRECIS√ÉO", dir+"/precisao",true);
+		gerarChart(dados, 0, 2,"Treinamento: RECALL", "√âPOCA", "RECALL", dir+"/recall",true);
+		gerarChart(dados, 0, 3,"Treinamento: F1 SCORE", "√âPOCA", "F1 SCORE", dir+"/f1score",true);
+		gerarChart(dados, 0, 4,"Treinamento: ERRO MEDIO", "√âPOCA", "LOSS", dir+"/loss",false);
 		
 		// CHARTS DE CADA CLASSE
 		for(int i = 1; i <= 5; i++) {
-			gerarChart(dados, i, 0,"Treinamento: PRECISAO (classe " + (i-1) +")", "…POCA", "PRECISAO", dir+"\\precisao_c"+(i-1),true);
-			gerarChart(dados, i, 1,"Treinamento: RECALL (classe " + (i-1) + ")", "…POCA", "RECALL", dir+"\\recall_c"+(i-1),true);
-			gerarChart(dados, i, 2,"Treinamento: F1 SCORE (classe " + (i-1) + ")", "…POCA", "F1 SCORE", dir+"\\f1score_c"+(i-1),true);
+			gerarChart(dados, i, 0,"Treinamento: PRECISAO (classe " + (i-1) +")", "√âPOCA", "PRECISAO", dir+"/precisao_c"+(i-1),true);
+			gerarChart(dados, i, 1,"Treinamento: RECALL (classe " + (i-1) + ")", "√âPOCA", "RECALL", dir+"/recall_c"+(i-1),true);
+			gerarChart(dados, i, 2,"Treinamento: F1 SCORE (classe " + (i-1) + ")", "√âPOCA", "F1 SCORE", dir+"/f1score_c"+(i-1),true);
 		}
 		
 		
@@ -98,7 +98,7 @@ public class NoletoGrafico {
 		
 		
          
-        chart.setBackgroundPaint(new Color(0xFF, 0xFF, 0xFF, 0));
+        chart.setBackgroundPaint(new Color(0xFF, 0xFF, 0xFF, 0xFF));
         chart.getLegend().setFrame(new BlockBorder());
 
         XYPlot plot = (XYPlot)chart.getPlot();

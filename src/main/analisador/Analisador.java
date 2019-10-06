@@ -35,22 +35,26 @@ import java.awt.event.ActionEvent;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import java.awt.Font;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dimension;
 
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeListener;
+
 import javax.swing.event.ChangeEvent;
+import javax.swing.Box;
 
 public class Analisador {
 	
-	private HashMap<String, Component> componentMap_panelDados = new HashMap<String,Component>();;
+	private HashMap<String, Component> componentMap_panelDados = new HashMap<String,Component>();
+	
 	private JFrame frmAnliseDosGrficos;
 	private JLabel epoca_menor_loss_1;
 	private JTextField epoca_field;
-	private AnalisarGrafico arquivo;
+	private AnalisarGrafico arquivo_atual;
+	private HashMap<String, AnalisarGrafico> arquivos = new HashMap<String,AnalisarGrafico>();
 	
 	public String[] findFoldersInDirectory(String directoryPath) {
 	    File directory = new File(directoryPath);
@@ -103,20 +107,20 @@ public class Analisador {
 		// acuracia - dados na epoca - precisao - f1score - recall - loss
 		
 		// DADOS DE TREINAMENTO
-		treinamento_acuracia.setText("Acur·cia: " + arquivo.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.ACURACIA));
-		treinamento_precisao.setText("Precis„o: " + arquivo.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.PRECISAO));
-		treinamento_f1score.setText("F1 Score: " + arquivo.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.F1SCORE));
-		treinamento_recall.setText("Recall: " + arquivo.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.RECALL));
-		treinamento_loss.setText("LOSS: " + arquivo.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.LOSS));
-		treinamento_dados.setText("(Dados na Època " + epoca + ")");
+		treinamento_acuracia.setText("Acur√°cia: " + arquivo_atual.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.ACURACIA));
+		treinamento_precisao.setText("Precis√£o: " + arquivo_atual.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.PRECISAO));
+		treinamento_f1score.setText("F1 Score: " + arquivo_atual.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.F1SCORE));
+		treinamento_recall.setText("Recall: " + arquivo_atual.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.RECALL));
+		treinamento_loss.setText("LOSS: " + arquivo_atual.get_stat_epoca(epoca, Dataset.TREINAMENTO, Stats.LOSS));
+		treinamento_dados.setText("(Dados na √©poca " + epoca + ")");
 		
 		// DADOS DE VALIDACAO
-		validacao_acuracia.setText("Acur·cia: " + arquivo.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.ACURACIA));
-		validacao_precisao.setText("Precis„o: " + arquivo.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.PRECISAO));
-		validacao_f1score.setText("F1 Score: " + arquivo.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.F1SCORE));
-		validacao_recall.setText("Recall: " + arquivo.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.RECALL));
-		validacao_loss.setText("LOSS: " + arquivo.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.LOSS));
-		validacao_dados.setText("(Dados na Època " + epoca + ")");
+		validacao_acuracia.setText("Acur√°cia: " + arquivo_atual.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.ACURACIA));
+		validacao_precisao.setText("Precis√£o: " + arquivo_atual.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.PRECISAO));
+		validacao_f1score.setText("F1 Score: " + arquivo_atual.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.F1SCORE));
+		validacao_recall.setText("Recall: " + arquivo_atual.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.RECALL));
+		validacao_loss.setText("LOSS: " + arquivo_atual.get_stat_epoca(epoca, Dataset.VALIDACAO, Stats.LOSS));
+		validacao_dados.setText("(Dados na √©poca " + epoca + ")");
 		
 	}
 
@@ -149,10 +153,21 @@ public class Analisador {
 	private void addToComponentMap(String nome, Component component) {
 		componentMap_panelDados.put(nome, component);
 	}
+	
+	private void addToArquivosMap(String nome, AnalisarGrafico arquivo) {
+		arquivos.put(nome, arquivo);
+	}
 
 	public Component getComponentByName(String name) {
         if (componentMap_panelDados.containsKey(name)) {
                 return (Component) componentMap_panelDados.get(name);
+        }
+        else return null;
+	}
+	
+	public AnalisarGrafico getArquivoByName(String name) {
+        if (arquivos.containsKey(name)) {
+                return (AnalisarGrafico) arquivos.get(name);
         }
         else return null;
 	}
@@ -185,18 +200,18 @@ public class Analisador {
 		
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		
-		
-		JLabel grafico = new JLabel();
-		
-		// placeholder
-		grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\20191001_2342\\acuracia.png"));
-		
-		
 		frmAnliseDosGrficos = new JFrame();
 		frmAnliseDosGrficos.setTitle("An\u00E1lise dos Gr\u00E1ficos");
 		frmAnliseDosGrficos.setResizable(false);
-		frmAnliseDosGrficos.setBounds(100, 100, 960, 558);
+		
+		Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+		double width = screenSize.getWidth();
+		double height = screenSize.getHeight();
+		
+		frmAnliseDosGrficos.setBounds(300, 200, 400, 558);
 		frmAnliseDosGrficos.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		final Grafico grafico = new Grafico(frmAnliseDosGrficos.getX()+frmAnliseDosGrficos.getWidth(),frmAnliseDosGrficos.getY());
 		
 		JPanel panel_treinamento = new JPanel();
 		JPanel panel_validacao = new JPanel();
@@ -208,20 +223,23 @@ public class Analisador {
 				JComboBox<String> combo_selecao_rede = new JComboBox<String>();
 				combo_selecao_rede.setName("combo_selecao_rede");
 				
-				JRadioButton rdbtnAcurcia = new JRadioButton("Acur·cia");
+				JRadioButton rdbtnAcurcia = new JRadioButton("Acur√°cia");
 				rdbtnAcurcia.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"\\acuracia.png"));
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/acuracia.png");
+						
 					}
 				});
 				bt.add(rdbtnAcurcia);
 				rdbtnAcurcia.setName("rdbtnAcurcia");
 				
-				JRadioButton rdbtnPreciso = new JRadioButton("Precis„o");
+				JRadioButton rdbtnPreciso = new JRadioButton("Precis√£o");
 				rdbtnPreciso.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
+						
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/precisao.png");
 
-						grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"\\precisao.png"));
+						//grafico.setIcon(new ImageIcon(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/precisao.png"));
 					}
 				});
 				bt.add(rdbtnPreciso);
@@ -230,7 +248,7 @@ public class Analisador {
 				JRadioButton rdbtnLoss = new JRadioButton("Loss");
 				rdbtnLoss.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
-						grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"\\loss.png"));
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/loss.png");
 					}
 				});
 				rdbtnLoss.setSelected(true);
@@ -240,7 +258,7 @@ public class Analisador {
 				JRadioButton rdbtnFScore = new JRadioButton("F1 Score");
 				rdbtnFScore.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"\\f1score.png"));
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/f1score.png");
 					}
 				});
 				bt.add(rdbtnFScore);
@@ -249,7 +267,7 @@ public class Analisador {
 				JRadioButton rdbtnRecall = new JRadioButton("Recall");
 				rdbtnRecall.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"\\recall.png"));
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/recall.png");
 					}
 				});
 				bt.add(rdbtnRecall);
@@ -257,20 +275,22 @@ public class Analisador {
 				
 				
 				
-				combo_selecao_rede.setModel(new DefaultComboBoxModel<String>(findFoldersInDirectory(System.getProperty("user.dir")+"\\redes\\")));
+				combo_selecao_rede.setModel(new DefaultComboBoxModel<String>(findFoldersInDirectory(System.getProperty("user.dir")+"/redes/")));
 				
-				arquivo = new CarregarModelo(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())).get_modelo();
+				arquivo_atual = new AnalisarGrafico(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()));
+				addToArquivosMap(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()), arquivo_atual);
 				
 				frmAnliseDosGrficos.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				
 				JLabel label_epoca_menor_loss_1 = new JLabel("\u00C9poca com menor LOSS na valida\u00E7\u00E3o: ");
 				label_epoca_menor_loss_1.setName("label_epoca_menor_loss");
 				
-				epoca_menor_loss_1 = new JLabel(String.valueOf(arquivo.get_epoca_menor_loss_validacao()));
+				epoca_menor_loss_1 = new JLabel(String.valueOf(arquivo_atual.get_epoca_menor_loss_validacao()));
 				epoca_menor_loss_1.setFont(new Font("Tahoma", Font.BOLD, 11));
 				epoca_menor_loss_1.setName("epoca_menor_loss_1");
 				
 				JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+				tabbedPane.setBackground(UIManager.getColor("Desktop.background"));
 				tabbedPane.setName("tabbedPane");
 				
 				JButton btn_atualizar = new JButton("");
@@ -278,7 +298,7 @@ public class Analisador {
 					public void actionPerformed(ActionEvent e) {
 						int selecionado = combo_selecao_rede.getSelectedIndex();
 						
-						combo_selecao_rede.setModel(new DefaultComboBoxModel<String>(findFoldersInDirectory(System.getProperty("user.dir")+"\\redes\\")));
+						combo_selecao_rede.setModel(new DefaultComboBoxModel<String>(findFoldersInDirectory(System.getProperty("user.dir")+"/redes/")));
 						
 						combo_selecao_rede.setSelectedIndex(selecionado);
 					}
@@ -287,11 +307,11 @@ public class Analisador {
 				btn_atualizar.setName("btn_atualizar");
 				
 				JSlider slider = new JSlider();
-				slider.setPaintTicks(true);
+				slider.setBorder(null);
 				slider.setName("slider");
 				slider.setMinimum(0);
-				slider.setMaximum(arquivo.get_qtd_epocas()-1);
-				slider.setValue(arquivo.get_epoca_menor_loss_validacao());
+				slider.setMaximum(arquivo_atual.get_qtd_epocas()-1);
+				slider.setValue(arquivo_atual.get_epoca_menor_loss_validacao());
 				
 				JLabel lblSelecionarpoca = new JLabel("Selecionar \u00E9poca:");
 				lblSelecionarpoca.setName("lblSelecionarpoca");
@@ -330,26 +350,31 @@ public class Analisador {
 						try {
 							
 							frmAnliseDosGrficos.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-							arquivo.set_rede(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()));
+							
+							arquivo_atual = getArquivoByName(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()));
+							
+							if (arquivo_atual == null) {
+								arquivo_atual = new AnalisarGrafico(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()));
+								addToArquivosMap(combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex()), arquivo_atual);
+							}
 							
 							frmAnliseDosGrficos.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 							
-							int menor_loss_epoca = arquivo.get_epoca_menor_loss_validacao();
+							int menor_loss_epoca = arquivo_atual.get_epoca_menor_loss_validacao();
 							
 							JLabel label_epoca_menor_loss = (JLabel) getComponentByName("epoca_menor_loss_1");
 							label_epoca_menor_loss.setText(String.valueOf(menor_loss_epoca));
 							
 							atualizarDados(menor_loss_epoca);
 							slider.setValue(menor_loss_epoca);
-							slider.setMaximum(arquivo.get_qtd_epocas()-1);
+							slider.setMaximum(arquivo_atual.get_qtd_epocas()-1);
 						} catch (ClassNotFoundException | IOException e1) {
 							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 
 						
-						grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"\\"+opcao +".png"));
+						grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/"+opcao +".png");
 					}
 				});
 				
@@ -379,16 +404,27 @@ public class Analisador {
 				});
 				
 				
-				
-				grafico.setIcon(new ImageIcon("E:\\Programas\\eclipseworkspace\\TCC\\redes\\"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"\\loss.png"));
+				grafico.alterar_grafico(System.getProperty("user.dir")+"/redes/"+combo_selecao_rede.getItemAt(combo_selecao_rede.getSelectedIndex())+"/loss.png");
 				
 				GroupLayout gl_panel_dados = new GroupLayout(panel_dados);
 				gl_panel_dados.setHorizontalGroup(
 					gl_panel_dados.createParallelGroup(Alignment.TRAILING)
 						.addGroup(gl_panel_dados.createSequentialGroup()
 							.addGroup(gl_panel_dados.createParallelGroup(Alignment.LEADING)
-								.addGroup(Alignment.TRAILING, gl_panel_dados.createSequentialGroup()
-									.addGap(18)
+								.addGroup(gl_panel_dados.createSequentialGroup()
+									.addComponent(slider, GroupLayout.PREFERRED_SIZE, 226, GroupLayout.PREFERRED_SIZE)
+									.addPreferredGap(ComponentPlacement.RELATED)
+									.addComponent(epoca_field, GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE))
+								.addGroup(gl_panel_dados.createSequentialGroup()
+									.addComponent(label_epoca_menor_loss_1, GroupLayout.PREFERRED_SIZE, 275, GroupLayout.PREFERRED_SIZE)
+									.addGap(6)
+									.addComponent(epoca_menor_loss_1, GroupLayout.DEFAULT_SIZE, 79, Short.MAX_VALUE))
+								.addGroup(gl_panel_dados.createSequentialGroup()
+									.addComponent(lblSelecionarpoca)
+									.addPreferredGap(ComponentPlacement.RELATED, 233, Short.MAX_VALUE))
+								.addComponent(tabbedPane, GroupLayout.DEFAULT_SIZE, 360, Short.MAX_VALUE)
+								.addComponent(btnInformaesDaRede, GroupLayout.DEFAULT_SIZE, 360, Short.MAX_VALUE)
+								.addGroup(gl_panel_dados.createSequentialGroup()
 									.addGroup(gl_panel_dados.createParallelGroup(Alignment.LEADING)
 										.addComponent(rdbtnRecall)
 										.addComponent(rdbtnLoss))
@@ -398,77 +434,53 @@ public class Analisador {
 										.addGroup(gl_panel_dados.createSequentialGroup()
 											.addComponent(rdbtnFScore)
 											.addPreferredGap(ComponentPlacement.UNRELATED)
-											.addComponent(rdbtnAcurcia)))
-									.addPreferredGap(ComponentPlacement.RELATED, 86, Short.MAX_VALUE))
-								.addGroup(Alignment.TRAILING, gl_panel_dados.createParallelGroup(Alignment.TRAILING, false)
-									.addGroup(gl_panel_dados.createSequentialGroup()
-										.addComponent(label_epoca_menor_loss_1, GroupLayout.PREFERRED_SIZE, 192, GroupLayout.PREFERRED_SIZE)
-										.addPreferredGap(ComponentPlacement.UNRELATED)
-										.addComponent(epoca_menor_loss_1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-									.addComponent(tabbedPane, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, 282, GroupLayout.PREFERRED_SIZE))
-								.addGroup(Alignment.TRAILING, gl_panel_dados.createSequentialGroup()
-									.addContainerGap()
-									.addComponent(slider, GroupLayout.PREFERRED_SIZE, 190, GroupLayout.PREFERRED_SIZE)
-									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(epoca_field, GroupLayout.DEFAULT_SIZE, 89, Short.MAX_VALUE))
-								.addGroup(Alignment.TRAILING, gl_panel_dados.createSequentialGroup()
-									.addContainerGap()
-									.addComponent(lblSelecionarpoca, GroupLayout.DEFAULT_SIZE, 285, Short.MAX_VALUE))
-								.addGroup(Alignment.TRAILING, gl_panel_dados.createSequentialGroup()
-									.addContainerGap()
-									.addComponent(btnInformaesDaRede, GroupLayout.PREFERRED_SIZE, 285, GroupLayout.PREFERRED_SIZE))
+											.addComponent(rdbtnAcurcia))))
 								.addGroup(gl_panel_dados.createSequentialGroup()
-									.addContainerGap()
 									.addComponent(lblModelo)
 									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(combo_selecao_rede, GroupLayout.PREFERRED_SIZE, 201, GroupLayout.PREFERRED_SIZE)
+									.addComponent(combo_selecao_rede, 0, 235, Short.MAX_VALUE)
 									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(btn_atualizar, GroupLayout.PREFERRED_SIZE, 37, GroupLayout.PREFERRED_SIZE)))
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(grafico, GroupLayout.PREFERRED_SIZE, 640, GroupLayout.PREFERRED_SIZE)
+									.addComponent(btn_atualizar)))
 							.addContainerGap())
 				);
 				gl_panel_dados.setVerticalGroup(
 					gl_panel_dados.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_panel_dados.createSequentialGroup()
 							.addContainerGap()
-							.addGroup(gl_panel_dados.createParallelGroup(Alignment.LEADING, false)
-								.addComponent(grafico, GroupLayout.PREFERRED_SIZE, 518, GroupLayout.PREFERRED_SIZE)
+							.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
+								.addComponent(epoca_menor_loss_1)
+								.addComponent(label_epoca_menor_loss_1))
+							.addPreferredGap(ComponentPlacement.RELATED)
+							.addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 218, GroupLayout.PREFERRED_SIZE)
+							.addGap(5)
+							.addGroup(gl_panel_dados.createParallelGroup(Alignment.TRAILING)
 								.addGroup(gl_panel_dados.createSequentialGroup()
-									.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
-										.addComponent(label_epoca_menor_loss_1)
-										.addComponent(epoca_menor_loss_1))
-									.addPreferredGap(ComponentPlacement.UNRELATED)
-									.addComponent(tabbedPane, GroupLayout.PREFERRED_SIZE, 218, GroupLayout.PREFERRED_SIZE)
-									.addPreferredGap(ComponentPlacement.RELATED)
 									.addComponent(lblSelecionarpoca)
-									.addGap(11)
-									.addGroup(gl_panel_dados.createParallelGroup(Alignment.LEADING)
-										.addComponent(epoca_field, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-										.addComponent(slider, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-									.addPreferredGap(ComponentPlacement.RELATED)
-									.addComponent(btnInformaesDaRede)
-									.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-									.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
-										.addComponent(rdbtnLoss)
-										.addComponent(rdbtnPreciso))
-									.addPreferredGap(ComponentPlacement.UNRELATED)
-									.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
-										.addComponent(rdbtnRecall)
-										.addComponent(rdbtnFScore)
-										.addComponent(rdbtnAcurcia))
-									.addPreferredGap(ComponentPlacement.UNRELATED)
-									.addGroup(gl_panel_dados.createParallelGroup(Alignment.TRAILING)
-										.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
-											.addComponent(combo_selecao_rede, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-											.addComponent(lblModelo))
-										.addComponent(btn_atualizar, GroupLayout.PREFERRED_SIZE, 20, GroupLayout.PREFERRED_SIZE))
-									.addGap(11)))
-							.addContainerGap())
+									.addGap(9)
+									.addComponent(slider, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+								.addComponent(epoca_field, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+							.addGap(18)
+							.addComponent(btnInformaesDaRede)
+							.addGap(18)
+							.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
+								.addComponent(rdbtnLoss)
+								.addComponent(rdbtnPreciso))
+							.addPreferredGap(ComponentPlacement.UNRELATED)
+							.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
+								.addComponent(rdbtnRecall)
+								.addComponent(rdbtnFScore)
+								.addComponent(rdbtnAcurcia))
+							.addGap(12)
+							.addGroup(gl_panel_dados.createParallelGroup(Alignment.TRAILING, false)
+								.addComponent(btn_atualizar, 0, 0, Short.MAX_VALUE)
+								.addGroup(gl_panel_dados.createParallelGroup(Alignment.BASELINE)
+									.addComponent(combo_selecao_rede, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+									.addComponent(lblModelo, GroupLayout.DEFAULT_SIZE, 25, Short.MAX_VALUE)))
+							.addContainerGap(77, Short.MAX_VALUE))
 				);
 				
 				
-				panel_treinamento.setBackground(Color.WHITE);
+				panel_treinamento.setBackground(UIManager.getColor("List.background"));
 				tabbedPane.addTab("Treinamento", null, panel_treinamento, null);
 				
 				JLabel treinamento_epoca = new JLabel("(Dados na \u00E9poca <valor>)");
@@ -524,7 +536,7 @@ public class Analisador {
 						panel_treinamento.setLayout(gl_panel_treinamento);
 						
 						
-						panel_validacao.setBackground(Color.WHITE);
+						panel_validacao.setBackground(UIManager.getColor("List.background"));
 						tabbedPane.addTab("Valida\u00E7\u00E3o", null, panel_validacao, null);
 						
 						JLabel validacao_acuracia = new JLabel("Acur\u00E1cia:");
@@ -581,10 +593,16 @@ public class Analisador {
 						);
 						panel_validacao.setLayout(gl_panel_validacao);
 						panel_dados.setLayout(gl_panel_dados);
+						
+						Component horizontalStrut = Box.createHorizontalStrut(20);
+						frmAnliseDosGrficos.getContentPane().add(horizontalStrut, BorderLayout.WEST);
+						
+						Component horizontalStrut_1 = Box.createHorizontalStrut(20);
+						frmAnliseDosGrficos.getContentPane().add(horizontalStrut_1, BorderLayout.EAST);
 
 		createComponentMap((JPanel)frmAnliseDosGrficos.getContentPane().getComponent(0));
 		
-		atualizarDados(arquivo.get_epoca_menor_loss_validacao());
+		atualizarDados(arquivo_atual.get_epoca_menor_loss_validacao());
 
 	}
 }

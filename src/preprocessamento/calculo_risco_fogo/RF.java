@@ -20,7 +20,7 @@ public class RF {
 	
 	public static void main (String[] args) throws ParseException {
 		
-		String pasta = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
+		String pasta = System.getProperty("user.dir") + "/src/resources/datasets/";
 		String arquivo = "filtrado_amostras_imperatriz_inmet.csv";
 		
 		ArrayList<ArrayList<String>> tabela = csv_to_ArrayList(pasta+arquivo, 1);
@@ -60,7 +60,7 @@ public class RF {
 		
 		
 		
-		// irá remover do CSV final os registros em que não foi possível classificar o risco
+		// irï¿½ remover do CSV final os registros em que nï¿½o foi possï¿½vel classificar o risco
 		for(ArrayList<String> registro : lista_remover) {
 			tabela.remove(registro);
 		}
@@ -79,7 +79,7 @@ public class RF {
 		
 		
 		salvarCSV("\"data\",\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"indice_risco\",\"classe_risco\"",
-				pasta+"\\nao_normalizado\\"+arquivo, tabela);
+				pasta+"/nao_normalizado/"+arquivo, tabela);
 		
 		
 		for(int i = 0; i < tabela.size(); i++) {
@@ -94,7 +94,7 @@ public class RF {
 		show_classes(tabela);
 		
 		salvarCSV("\"precipitacao\",\"temperatura\",\"umidade\",\"dias_de_secura\",\"classe_risco\"",
-				pasta+"\\normalizado\\"+arquivo, tabela);
+				pasta+"/normalizado/"+arquivo, tabela);
 		
 	}
 	
@@ -263,7 +263,7 @@ public class RF {
 		}
 	}
 	
-	private static void salvarCSV(String colunas, String arquivo, ArrayList<ArrayList<String>> tabela) {
+	public static void salvarCSV(String colunas, String arquivo, ArrayList<ArrayList<String>> tabela) {
 		
 		try {
 		
@@ -271,7 +271,9 @@ public class RF {
 	        FileWriter fw = new FileWriter(file);
 	        BufferedWriter bw = new BufferedWriter(fw);
 	        
-	        bw.write(colunas);
+	        if(colunas != null) {
+	        	bw.write(colunas);	
+	        }
 	        bw.newLine();
 	        for(int i=0;i<tabela.size();i++){
 	        	for(int j=0; j<tabela.get(i).size(); j++) {
@@ -384,12 +386,56 @@ public class RF {
 		System.out.println("4: " + classe4 + " amostras");
 		
 	}
+	
+	public static void salvar_variaveis_normalizacao(ArrayList<ArrayList<String>> tabela, String arquivo) {
+		
+		ArrayList<ArrayList<String>> tabela_valores = new ArrayList<ArrayList<String>>(); 
+		
+		double[] menor = new double[tabela.get(0).size()];
+		double[] maior = new double[tabela.get(0).size()];
+		
+		// primeira passagem (descobrirï¿½ os limites da tabela)
+		for(int i = 0; i < tabela.size(); i++) {
+			if(i == 0) {
+				for(int j = 0; j < tabela.get(i).size(); j++) {
+					menor[j] = Double.parseDouble(tabela.get(i).get(j));	
+					maior[j] = Double.parseDouble(tabela.get(i).get(j));	
+				}
+
+			}
+			
+			for(int j = 0; j < tabela.get(i).size(); j++) {
+				if(Double.parseDouble(tabela.get(i).get(j)) < menor[j]) {
+					menor[j] = Double.parseDouble(tabela.get(i).get(j));
+				}
+				if(Double.parseDouble(tabela.get(i).get(j)) > maior[j]) {
+					maior[j] = Double.parseDouble(tabela.get(i).get(j));
+				}
+			}
+		}
+		
+		ArrayList<String> menores = new ArrayList<String>();
+		ArrayList<String> maiores = new ArrayList<String>();
+		
+		for(int i = 0; i < 4; i++) {
+			menores.add(String.valueOf(menor[i]));
+			maiores.add(String.valueOf(maior[i]));
+		}		
+		
+		tabela_valores.add(menores);
+		tabela_valores.add(maiores);
+		
+		salvarCSV(null, arquivo, tabela_valores);
+		
+	}
+	
+	
 	private static void normalizar(ArrayList<ArrayList<String>> tabela) {
 		
 		double[] menor = new double[tabela.size()-1];
 		double[] maior = new double[tabela.size()-1];
 		
-		// primeira passagem (descobrirá os limites da tabela)
+		// primeira passagem (descobrirï¿½ os limites da tabela)
 		for(int i = 0; i < tabela.size(); i++) {
 			if(i == 0) {
 				for(int j = 0; j < tabela.get(i).size()-1; j++) {
@@ -409,10 +455,10 @@ public class RF {
 			}
 		}
 
-		// segunda passagem (normalização)
+		// segunda passagem (normalizaï¿½ï¿½o)
 		for(ArrayList<String> item : tabela) {
 			
-			// normalizar precipitação
+			// normalizar precipitaï¿½ï¿½o
 			double prec = (Double.parseDouble(item.get(0))-menor[0])/(maior[0]-menor[0]);
 			
 			item.set(0, Double.toString(prec));

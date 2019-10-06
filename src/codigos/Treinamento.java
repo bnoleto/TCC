@@ -67,11 +67,11 @@ public class Treinamento {
 
     	String nome_rede = Horario.getDiaHora();
     	
-    	// dados para serem adicionados ao gráfico ao final
+    	// dados para serem adicionados ao grï¿½fico ao final
     	ArrayList<ArrayList<ArrayList<Double[]>>> dados = new ArrayList<ArrayList<ArrayList<Double[]>>>();
     	
     	dados.add(ArrayListNomeado("Dataset de Treinamento"));
-    	dados.add(ArrayListNomeado("Dataset de Validação"));
+    	dados.add(ArrayListNomeado("Dataset de ValidaÃ§Ã£o"));
 
         // parte inicial da rede
         ListBuilder b1 = new NeuralNetConfiguration.Builder()
@@ -104,7 +104,7 @@ public class Treinamento {
         	
         }
         
-        // camada de saída
+        // camada de saï¿½da
         b1.layer(new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
                 .activation(Activation.SOFTMAX)
                 .nIn(n_saida).nOut(numSaidas)
@@ -116,7 +116,8 @@ public class Treinamento {
     	
     	model.init();
     	
-    	FileUtils.writeStringToFile(new File(System.getProperty("user.dir")+"\\redes\\"+nome_rede+"\\","config.json"), conf.toJson(), Charset.forName("UTF-8"));
+    	
+    	FileUtils.writeStringToFile(new File(System.getProperty("user.dir")+"/redes/"+nome_rede+"/","config.json"), conf.toJson(), Charset.forName("UTF-8"));
     	
     	FileSplit[] dataset = iniciar_dataset(nome_rede);
     	
@@ -126,47 +127,29 @@ public class Treinamento {
 	
 	private static FileSplit[] iniciar_dataset(String nome_rede) throws IOException {
 		
-		FileSplit[] dataset = dividir_dataset("normalizado\\filtrado_amostras_imperatriz_inmet.csv",nome_rede, 0.75);
+		FileSplit[] dataset = dividir_dataset("normalizado/filtrado_amostras_imperatriz_inmet.csv",nome_rede, 0.75);
 
 		return dataset;
 	}
 	
 	private static FileSplit[] abrir_dataset(String nome_rede) throws IOException, ClassNotFoundException {
-        
-		ArrayList<List<ArrayList<String>>> dataset = abrir_objeto(nome_rede, "dataset");
 
-        FileSplit fs_treinamento = new FileSplit(RF.arrayList_to_CSV(dataset.get(0)));
-        FileSplit fs_validacao = new FileSplit(RF.arrayList_to_CSV(dataset.get(1)));
+		ArrayList<ArrayList<String>> dataset_treinamento = RF.csv_to_ArrayList(System.getProperty("user.dir")+"/redes/"+nome_rede+"/dataset_treinamento", 1);
+		ArrayList<ArrayList<String>> dataset_validacao = RF.csv_to_ArrayList(System.getProperty("user.dir")+"/redes/"+nome_rede+"/dataset_validacao", 1);
+
+        FileSplit fs_treinamento = new FileSplit(RF.arrayList_to_CSV(dataset_treinamento));
+        FileSplit fs_validacao = new FileSplit(RF.arrayList_to_CSV(dataset_validacao));
 		
 		return new FileSplit[] {fs_treinamento,fs_validacao};
 
-	}
-	
-	private static void salvar_objeto(ArrayList<List<ArrayList<String>>> objeto, String nome_rede,String nome_arquivo) throws IOException {
-		FileOutputStream fos = new FileOutputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\"+nome_arquivo);
-        ObjectOutputStream oos = new ObjectOutputStream(fos);
-        oos.writeObject(objeto);
-        oos.close();
-	}
-	
-	private static ArrayList<List<ArrayList<String>>> abrir_objeto(String nome_rede,String nome_arquivo) throws IOException, ClassNotFoundException {
-        
-		System.out.println(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\"+nome_arquivo);
-		
-        FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\"+nome_arquivo);
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        ArrayList<List<ArrayList<String>>> objeto = (ArrayList<List<ArrayList<String>>>) ois.readObject();
-        ois.close();
-        
-        return objeto;
 	}
 
 
 	public static void continuar_treinamento(String nome_rede, int qtd_epocas) throws IOException, ClassNotFoundException, InterruptedException {
 		
-		MultiLayerNetwork model = MultiLayerNetwork.load(new File(System.getProperty("user.dir")+"\\redes\\"+nome_rede+"\\","rede.nn"), true);
+		MultiLayerNetwork model = MultiLayerNetwork.load(new File(System.getProperty("user.dir")+"/redes/"+nome_rede+"/","rede.nn"), true);
 		
-    	FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
+    	FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/redes/"+nome_rede+"/estatisticas.stats");
         ObjectInputStream ois = new ObjectInputStream(fis);
         ArrayList<ArrayList<ArrayList<Double[]>>> dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
         ois.close();
@@ -183,7 +166,7 @@ public class Treinamento {
 		ArrayList<ArrayList<Double[]>> stats_treinamento = dados.get(0);
 		ArrayList<ArrayList<Double[]>> stats_teste = dados.get(1);
 		
-		File dir = new File(System.getProperty("user.dir") + "\\redes\\" +nome_rede+"\\");
+		File dir = new File(System.getProperty("user.dir") + "/redes/" +nome_rede+"/");
         dir.mkdirs();
 
         int batchSize = (int) dataset[0].length();
@@ -196,21 +179,29 @@ public class Treinamento {
         rrTest.initialize(dataset[1]);
         DataSetIterator testIter = new RecordReaderDataSetIterator(rrTest,batchSize,numEntradas,numSaidas);
 
-        double menor_loss = 0;
         boolean overfitting = false;
         
+        double loss_train_anterior = 0, loss_valid_anterior = 0;
+        double media_delta_loss = -99999;
+        
+        MultiLayerNetwork model_backup;
+        
         System.out.println("Treinando modelo...");
-        for( int i=0; i<nEpochs; i++ ) {
+        for( int i=1; i<=nEpochs; i++ ) {
+        	
+        	model_backup = model.clone();
         	
             model.fit(trainIter);
 
-            // Estatísicas com o dataset de treinamento
+            // Estatï¿½sicas com o dataset de treinamento
             Evaluation eval = model.evaluate(trainIter);
             System.out.println(eval.stats());
-            System.out.println("*** Fim da Época " + i + "/" + (nEpochs-1) +" ***" );
-            DataSetLossCalculator lc = new DataSetLossCalculator(trainIter, true);
+            System.out.println("*** Fim da Ã©poca " + i + "/" + nEpochs +" ***" );
+            double treinamento_loss_atual = new DataSetLossCalculator(trainIter, true).calculateScore(model);
             
-            Double[] overall_tr = new Double[] {eval.accuracy(),eval.precision(),eval.recall(),eval.f1(),lc.calculateScore(model)};
+            
+            
+            Double[] overall_tr = new Double[] {eval.accuracy(),eval.precision(),eval.recall(),eval.f1(),treinamento_loss_atual};
             Double[][] tr_classes = new Double[][] { 
             	new Double[] {eval.precision(0),eval.recall(0),eval.f1(0)},
             	new Double[] {eval.precision(1),eval.recall(1),eval.f1(1)},
@@ -230,11 +221,12 @@ public class Treinamento {
             stats_treinamento.add(stat_tr);
             trainIter.reset();
             
-            // Guardará estatísicas com o dataset de teste
+            // Guardarï¿½ estatï¿½sicas com o dataset de teste
             Evaluation evalTeste = model.evaluate(testIter);
-            lc = new DataSetLossCalculator(testIter, true);
             
-            Double[] overall_val = new Double[] {evalTeste.accuracy(),evalTeste.precision(),evalTeste.recall(),evalTeste.f1(),lc.calculateScore(model)};
+            double validacao_loss_atual = new DataSetLossCalculator(testIter, true).calculateScore(model);
+            
+            Double[] overall_val = new Double[] {evalTeste.accuracy(),evalTeste.precision(),evalTeste.recall(),evalTeste.f1(),validacao_loss_atual};
             Double[][] val_classes = new Double[][] { 
             	new Double[] {evalTeste.precision(0),evalTeste.recall(0),evalTeste.f1(0)},
             	new Double[] {evalTeste.precision(1),evalTeste.recall(1),evalTeste.f1(1)},
@@ -252,45 +244,59 @@ public class Treinamento {
             stat_val.add(val_classes[4]);
             
             stats_teste.add(stat_val);
-            
-            if(i == 0) {
-            	menor_loss = lc.calculateScore(model);
-            } 
-            
+
+
             if(overfitting == false){
-            	if(lc.calculateScore(model) > menor_loss) {
+            	
+            	
+            	//(validacao_loss_atual-loss_valid_anterior)
+            	
+            	media_delta_loss += (validacao_loss_atual-loss_valid_anterior);
+            	
+            	if(i % 50 == 0) {
+
+            		if(i > 1 && media_delta_loss/50 > 0) {
+
+                		File dir2 = new File(System.getProperty("user.dir") + "/redes/" +nome_rede+"/melhor/");
+            	        dir2.mkdirs();
+                		
+                		model_backup.save(new File(dir2,"rede.nn"), true);
+    	            	
+    	            	FileOutputStream fos = new FileOutputStream(dir2+"/estatisticas.stats");
+    	    	        ObjectOutputStream oos = new ObjectOutputStream(fos);
+    	    	        oos.writeObject(dados);
+    	    	        oos.close();
+    	    	        
+    	    	        NoletoGrafico.gerarGraficos(dados, dir2);
+    	            	
+    	    	        System.out.println("Menor loss atingido, rede salva!");
+    	    	        
+    	    	        overfitting = true;
+                		
+                	} else {
+                		model_backup = model.clone();	
+                	}
             		
-            		File dir2 = new File(System.getProperty("user.dir") + "\\redes\\" +nome_rede+"\\melhor\\");
-        	        dir2.mkdirs();
-            		
-            		model.save(new File(dir2,"rede.nn"), true);
-	            	
-	            	FileOutputStream fos = new FileOutputStream(dir2+"\\estatisticas.stats");
-	    	        ObjectOutputStream oos = new ObjectOutputStream(fos);
-	    	        oos.writeObject(dados);
-	    	        oos.close();
-	    	        
-	    	        NoletoGrafico.gerarGraficos(dados, dir2);
-	            	
-	    	        System.out.println("Menor loss atingido, rede salva!");
-	    	        
-	    	        overfitting = true;
-            		
-            	} else {
-            		menor_loss = lc.calculateScore(model);
+            		media_delta_loss = 0;
             	}
+				
             }
             
             testIter.reset();
+            
+            System.out.println("Delta_LOSS => Treinamento: " + (treinamento_loss_atual-loss_train_anterior) + " / ValidaÃ§Ã£o: " + (validacao_loss_atual-loss_valid_anterior));
+            
+            loss_train_anterior = treinamento_loss_atual;
+            loss_valid_anterior = validacao_loss_atual;
 
-            // salvar a rede a cada 1000 épocas e atualizar gráficos
-            if((i+1) % 1000 == 0) {
+            // salvar a rede a cada 1000 ï¿½pocas e atualizar grï¿½ficos
+            if(i > 1 && i % 1000 == 0) {
             	
             	System.out.println("Salvando rede...");
             	
             	model.save(new File(dir,"rede.nn"), true);
             	
-            	FileOutputStream fos = new FileOutputStream(dir+"\\estatisticas.stats");
+            	FileOutputStream fos = new FileOutputStream(dir+"/estatisticas.stats");
     	        ObjectOutputStream oos = new ObjectOutputStream(fos);
     	        oos.writeObject(dados);
     	        oos.close();
@@ -306,7 +312,7 @@ public class Treinamento {
 
         model.save(new File(dir,"rede.nn"), true);
         
-        System.out.println("Gerando análise do modelo da rede....");
+        System.out.println("Gerando anÃ¡lise do modelo da rede....");
         
         Evaluation eval = new Evaluation(numSaidas);
         while(testIter.hasNext()){
@@ -321,7 +327,7 @@ public class Treinamento {
         
         System.out.println(eval.stats());
         
-        FileOutputStream fos = new FileOutputStream(dir+"\\estatisticas.stats");
+        FileOutputStream fos = new FileOutputStream(dir+"/estatisticas.stats");
         ObjectOutputStream oos = new ObjectOutputStream(fos);
         oos.writeObject(dados);
         oos.close();
@@ -332,7 +338,7 @@ public class Treinamento {
 
 	private static FileSplit[] dividir_dataset(String arquivo, String nome_rede, double razao_treinamento) throws IOException {
 		
-		String diretorio_dataset = System.getProperty("user.dir") + "\\src\\resources\\datasets\\";
+		String diretorio_dataset = System.getProperty("user.dir") + "/src/resources/datasets/";
 		
 		ArrayList<ArrayList<String>> dataset = RF.csv_to_ArrayList(diretorio_dataset+arquivo, 1);
 		
@@ -340,29 +346,27 @@ public class Treinamento {
 		int i_final_validacao = dataset.size()-1;
 		
 		List<ArrayList<String>> treinamento = dataset.subList(0, i_final_treinamento+1);
-		
-		System.out.println(dataset.get((int) ((razao_treinamento*dataset.size())-10)));
+		List<ArrayList<String>> validacao = dataset.subList(i_final_treinamento+1, i_final_validacao+1);
+
 		
 		Collections.shuffle(treinamento);
 		
 		treinamento = balancear(treinamento);
+
+		ArrayList<ArrayList<String>> treinamento_output = new ArrayList<ArrayList<String>>();
+		treinamento_output.addAll(treinamento);
 		
-		System.out.println(dataset.get((int) ((razao_treinamento*dataset.size())-10)));
+		ArrayList<ArrayList<String>> validacao_output = new ArrayList<ArrayList<String>>();
+		validacao_output.addAll(validacao);
 		
-		List<ArrayList<String>> validacao = dataset.subList(i_final_treinamento+1, i_final_validacao+1);
-		
-		
-		ArrayList<List<ArrayList<String>>> conjunto = new ArrayList<List<ArrayList<String>>>();
-        
-        salvar_objeto(conjunto, nome_rede, "dataset");
+		RF.salvarCSV(null, System.getProperty("user.dir") + "/redes/"+nome_rede+"/dataset_treinamento",treinamento_output);
+		RF.salvarCSV(null, System.getProperty("user.dir") + "/redes/"+nome_rede+"/dataset_validacao",validacao_output);
 
         FileSplit fs_treinamento = new FileSplit(RF.arrayList_to_CSV(treinamento));
         FileSplit fs_validacao = new FileSplit(RF.arrayList_to_CSV(validacao));
 		
 		return new FileSplit[] {fs_treinamento,fs_validacao};
 	}
-	
-	
 
 	private static List<ArrayList<String>> balancear(List<ArrayList<String>> treinamento) {
 				

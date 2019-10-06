@@ -5,15 +5,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
-import main.analisador.CarregarModelo;
-
 public class AnalisarGrafico {
 	
 	private ArrayList<ArrayList<ArrayList<Double[]>>> dados;
 	
 	public AnalisarGrafico(String nome_rede) throws IOException, ClassNotFoundException {
 		
-		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "\\redes\\"+nome_rede+"\\estatisticas.stats");
+		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/redes/"+nome_rede+"/estatisticas.stats");
         ObjectInputStream ois = new ObjectInputStream(fis);
         dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
         ois.close();
@@ -34,7 +32,7 @@ public class AnalisarGrafico {
 		
 		System.out.println("== Dataset " + dataset.toString() + " ==");
 		System.out.println("Menor " + stats.toString() + ": " + menor_valor);
-		System.out.println("Época: " + (epoca+1));
+		System.out.println("ï¿½poca: " + (epoca+1));
 		
 	}
 	
@@ -78,13 +76,13 @@ public class AnalisarGrafico {
 		
 		System.out.println("== Dataset " + dataset.toString() + " ==");
 		System.out.println("Maior " + stats.toString() + ": " + maior_valor);
-		System.out.println("Época: " + epoca);
+		System.out.println("ï¿½poca: " + epoca);
 		
 	}
 	
 	public void get_info_epoca(int epoca) throws IOException, ClassNotFoundException {
 		
-		System.out.println("ÉPOCA " + epoca);
+		System.out.println("ï¿½POCA " + epoca);
 		
 		System.out.println("== Dataset de TREINAMENTO ==");
 		
@@ -92,7 +90,7 @@ public class AnalisarGrafico {
 			System.out.println(Stats.values()[i].toString() + ": " + dados.get(0).get(0).get(epoca)[i]);	
 		}
 		
-		System.out.println("== Dataset de VALIDAÇÃO ==");
+		System.out.println("== Dataset de VALIDAï¿½ï¿½O ==");
 		
 		for(int i = 0; i < Stats.values().length; i++) {
 			System.out.println(Stats.values()[i].toString() + ": " + dados.get(1).get(0).get(epoca)[i]);	
@@ -103,12 +101,6 @@ public class AnalisarGrafico {
 	public double get_stat_epoca(int epoca, Dataset dataset,Stats stats) throws IOException, ClassNotFoundException {
 
 		return dados.get(dataset.ordinal()).get(epoca).get(0)[stats.ordinal()];
-		
-	}
-
-	public void set_rede(String nome_rede) throws IOException, ClassNotFoundException {
-		
-		dados = new CarregarModelo(nome_rede).get_modelo().dados;
 		
 	}
 
