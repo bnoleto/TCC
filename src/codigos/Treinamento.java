@@ -184,12 +184,12 @@ public class Treinamento {
         double loss_train_anterior = 0, loss_valid_anterior = 0;
         double media_delta_loss = -99999;
         
-        MultiLayerNetwork model_backup;
+        MultiLayerNetwork model_backup = model.clone();
         
         System.out.println("Treinando modelo...");
         for( int i=1; i<=nEpochs; i++ ) {
         	
-        	model_backup = model.clone();
+        	//model_backup = model.clone();
         	
             model.fit(trainIter);
 
