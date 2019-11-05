@@ -18,6 +18,112 @@ import preprocessamento.PreProcessadorCSV;
 
 public class RF {
 	
+	public static ArrayList<ArrayList<String>> calcularRF_analise(ArrayList<ArrayList<String>> dados_met, ArrayList<ArrayList<String>> dados_queimadas) throws ParseException{
+		
+		ArrayList<ArrayList<String>> tabela = dados_met;
+		/*
+		Calendar data_inicial = Calendar.getInstance();
+		Calendar data_final = Calendar.getInstance();
+		
+		data_inicial.set(1900, Calendar.JANUARY, 1);
+		data_final.set(2018, Calendar.DECEMBER, 31);
+		*/
+
+		ArrayList<ArrayList<String>> lista_remover = new ArrayList<ArrayList<String>>();
+		
+		
+		for(int i = 0; i < tabela.size(); i++) {
+
+			try {
+				
+				double pse = get_pse(i, tabela);
+				
+				double risco_observado = calcular_risco_observado(pse, tabela, i,Vegetacao.SAVANA_CAATINGA_ABERTA);
+				
+				System.out.println(((double)i/tabela.size()*100) + "% (" + (i+1) +"/"+tabela.size()+")");
+				
+				
+				tabela.get(i).add(Double.toString(pse));
+				tabela.get(i).add(Double.toString(risco_observado));
+				tabela.get(i).add(classificar_rf_indexado(risco_observado));
+				
+				
+			} catch (Exception e) {
+				lista_remover.add(tabela.get(i));
+			}
+
+		}
+		
+		
+		
+		
+		// irï¿½ remover do CSV final os registros em que nï¿½o foi possï¿½vel classificar o risco
+		for(ArrayList<String> registro : lista_remover) {
+			tabela.remove(registro);
+		}
+		/*
+		Calendar data_inicial = Calendar.getInstance();
+		Calendar data_final = Calendar.getInstance();
+		
+		data_inicial.set(1900, 1, 1);
+		data_final.set(2019, 12, 31);
+		*/
+		
+		//tabela = PreProcessadorCSV.filtrar_por_data_string(data_inicial, data_final, tabela);
+		
+		ArrayList<ArrayList<String>> remover_tabela = new ArrayList<ArrayList<String>>();
+		
+		for(ArrayList<String> amostra : tabela) {
+			
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			formatter.setTimeZone(TimeZone.getTimeZone("America/Brasilia"));
+			Date data_hora = formatter.parse(amostra.get(0));
+			
+			Calendar data = Calendar.getInstance();
+			data.setTimeInMillis(data_hora.getTime());
+			
+			boolean excluir = true;
+			
+			for(ArrayList<String> amostra_queim : dados_queimadas) {
+				
+				SimpleDateFormat formatter_q = new SimpleDateFormat("yyyy-MM-dd");
+				formatter_q.setTimeZone(TimeZone.getTimeZone("America/Brasilia"));
+				Date data_hora_q = formatter.parse(amostra_queim.get(0));
+				
+				Calendar data_q = Calendar.getInstance();
+				data_q.setTimeInMillis(data_hora_q.getTime());
+				/*
+				System.out.print(data_q.get(Calendar.YEAR)+"-"+(data_q.get(Calendar.MONTH)+1)+"-"+data_q.get(Calendar.DAY_OF_MONTH));
+				System.out.print(" / ");
+				System.out.println(data.get(Calendar.YEAR)+"-"+(data.get(Calendar.MONTH)+1)+"-"+data.get(Calendar.DAY_OF_MONTH));
+				*/
+				if(data_q.compareTo(data) == 0) {
+					excluir = false;
+				}
+			}
+			
+			if (excluir) {
+				remover_tabela.add(amostra);
+			}
+			
+			
+		}
+		
+		tabela.removeAll(remover_tabela);
+		
+		for(int i = 0; i < tabela.size(); i++) {
+			
+			tabela.get(i).remove(5); // remove risco (double)
+			//tabela.get(i).remove(0); // remove data
+			
+		}
+		
+		System.out.println(tabela.size());
+		
+		return tabela;
+		
+	}
+	
 	public static void main (String[] args) throws ParseException {
 		
 		String pasta = System.getProperty("user.dir") + "/src/resources/datasets/";
@@ -209,6 +315,34 @@ public class RF {
 		return 105*fp1*fp2*fp3*fp4*fp5*fp6a10*fp11a15*fp16a30*fp31a60*fp61a90*fp91a120;
 	}
 	
+	public static double get_pse(double[] precipitacoes) throws ParseException {
+		double prec1 = precipitacoes[0];
+		double prec2 = precipitacoes[1];	
+		double prec3 = precipitacoes[2];
+		double prec4 = precipitacoes[3];
+		double prec5 = precipitacoes[4];
+		double prec10 = precipitacoes[5];
+		double prec15 = precipitacoes[6];
+		double prec30 = precipitacoes[7];
+		double prec60 = precipitacoes[8];
+		double prec90 = precipitacoes[9];
+		double prec120 = precipitacoes[10];
+		
+		double fp1 = Math.exp(-0.14*prec1);
+		double fp2 = Math.exp(-0.07*(prec2-prec1));
+		double fp3 = Math.exp(-0.04*(prec3-prec2));
+		double fp4 = Math.exp(-0.03*(prec4-prec3));
+		double fp5 = Math.exp(-0.02*(prec5-prec4));
+		double fp6a10 = Math.exp(-0.01*(prec10-prec5));
+		double fp11a15 = Math.exp(-0.008*(prec15-prec10));
+		double fp16a30 = Math.exp(-0.004*(prec30-prec15));
+		double fp31a60 = Math.exp(-0.002*(prec60-prec30));
+		double fp61a90 = Math.exp(-0.001*(prec90-prec60));
+		double fp91a120 = Math.exp(-0.0007*(prec120-prec90));
+		
+		return 105*fp1*fp2*fp3*fp4*fp5*fp6a10*fp11a15*fp16a30*fp31a60*fp61a90*fp91a120;
+	}
+	
 	private static double calcular_risco_observado(double pse, ArrayList<ArrayList<String>> tabela, int i,Vegetacao vegeta) throws ArrayIndexOutOfBoundsException, ParseException {
 		ArrayList<String> dia_corrente = tabela.get(i);
 		
@@ -235,17 +369,56 @@ public class RF {
 		return rf_observado;
 	}
 	
-	private static String classificar_rf(double rf_observado) {
+	public static double calcular_risco_observado(double prec, double temp, double umid, double pse, Vegetacao vegeta) throws ArrayIndexOutOfBoundsException, ParseException {
+		
+		double rf_basico;
+		
+		rf_basico = (0.9*(1+Math.sin(((vegetacao(vegeta)*pse)-90)*(3.14/180))))/2;
+		
+		if(rf_basico > 0.9) {
+			rf_basico = 0.9;
+		}
+		
+		double fu = (umid*-0.006)+1.3;
+		
+		double ft = (temp*0.02)+0.4;
+		
+		double rf_observado = rf_basico * ft * fu;
+		
+		if(rf_observado < 0.01) {
+			return 0;
+		}
+		
+		
+		
+		return rf_observado;
+	}
+	
+	public static String classificar_rf(double rf_observado) {
 		if(rf_observado <= 0.15) {
-			return "MINIMO";
+			return "MÍNIMO";
 		} else if (rf_observado > 0.15 && rf_observado <= 0.40) {
 			return "BAIXO";
 		} else if (rf_observado > 0.40 && rf_observado <= 0.70) {
-			return "MEDIO";
+			return "MÉDIO";
 		} else if (rf_observado > 0.70 && rf_observado <= 0.95) {
 			return "ALTO";
 		} else {
-			return "CRITICO";
+			return "CRÍTICO";
+		}
+	}
+	
+	public static Risco classificar_rf_enum(double rf_observado) {
+		if(rf_observado <= 0.15) {
+			return Risco.MINIMO;
+		} else if (rf_observado > 0.15 && rf_observado <= 0.40) {
+			return Risco.BAIXO;
+		} else if (rf_observado > 0.40 && rf_observado <= 0.70) {
+			return Risco.MEDIO;
+		} else if (rf_observado > 0.70 && rf_observado <= 0.95) {
+			return Risco.ALTO;
+		} else {
+			return Risco.CRITICO;
 		}
 	}
 	

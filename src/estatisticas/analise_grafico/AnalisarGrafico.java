@@ -1,19 +1,125 @@
 package estatisticas.analise_grafico;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
+class AbrirArquivo implements Runnable{
+	
+	private ObjectInputStream ois;
+	private int bytes_restantes;
+	private ArrayList<ArrayList<ArrayList<Double[]>>> dados;
+
+	public AbrirArquivo(ObjectInputStream ois) {
+		this.ois = ois;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void run() {
+		
+		try {
+
+			dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
+			
+
+		} catch (ClassNotFoundException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public ArrayList<ArrayList<ArrayList<Double[]>>> get_dados(){
+		return this.dados;
+	}
+	
+	
+	
+	public int get_bytes_restantes(){
+		return this.bytes_restantes;
+		
+	}
+	
+}
+
 public class AnalisarGrafico {
 	
 	private ArrayList<ArrayList<ArrayList<Double[]>>> dados;
 	
+	public static void show_barra_carregamento(Thread t1, AbrirArquivo abridor, int total, int intervalo, int tamanho_barra) {
+		
+		
+		while(t1.isAlive()) {
+			
+			int bytes_carregados = total - abridor.get_bytes_restantes();
+			
+			double porcentagem = (double)bytes_carregados/total;
+			
+			int quadrados = (int) (porcentagem*tamanho_barra);
+			double porcentagem100 = porcentagem*100;
+			
+			String linha = "";
+			
+			linha+="[";
+			for(int i = 0; i<tamanho_barra; i++) {
+				if(i<quadrados) {
+					linha+="#";
+					
+				}else {
+					linha+=" ";
+				}
+				
+			}
+			linha+="] ";
+			
+			linha+= String.format("%.2f", porcentagem100) + "%";
+			System.out.println(linha);
+			try {
+				Thread.sleep(intervalo);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			
+			}
+		}
+		
+		System.out.println("Carregamento finalizado!");
+	}
+	
 	public AnalisarGrafico(String nome_rede) throws IOException, ClassNotFoundException {
 		
 		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/redes/"+nome_rede+"/estatisticas.stats");
-        ObjectInputStream ois = new ObjectInputStream(fis);
-        dados = (ArrayList<ArrayList<ArrayList<Double[]>>>) ois.readObject();
+		
+		int tamanho_arquivo = fis.available(); 
+		
+		BufferedInputStream bis = new BufferedInputStream(fis);
+		
+        ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(fis));
+        
+        AbrirArquivo abrir = new AbrirArquivo(ois);
+        
+        Thread t1 = new Thread(abrir);
+        
+        t1.start();
+        
+        while(t1.isAlive()) {
+        	
+        	//show_barra_carregamento(t1, abrir, tamanho_arquivo, 100, 50);
+        	System.out.println("Carregando " + nome_rede + "....");
+        	try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        System.out.println("Carregamento finalizado!");
+        
+        
+        dados = abrir.get_dados();
         ois.close();
 	}
 	
@@ -32,7 +138,7 @@ public class AnalisarGrafico {
 		
 		System.out.println("== Dataset " + dataset.toString() + " ==");
 		System.out.println("Menor " + stats.toString() + ": " + menor_valor);
-		System.out.println("ï¿½poca: " + (epoca+1));
+		System.out.println("Época: " + (epoca+1));
 		
 	}
 	

@@ -13,6 +13,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import preprocessamento.calculo_risco_fogo.RF;
+
 public class PreProcessadorCSV {
 	
 	private static Calendar cal_inicial = Calendar.getInstance();
@@ -37,14 +39,29 @@ public class PreProcessadorCSV {
 	
 	public static void main(String[] args) throws ParseException {
 		
-		cal_inicial.set(1900, 1, 1);
-		cal_final.set(2020, 12, 31);
+		cal_inicial.set(2018, 0, 1);
+		cal_final.set(2018, 12, 31);
 		
 		String pasta = System.getProperty("user.dir") + "/src/resources/datasets/";
-		String arquivo = "amostras_imperatriz_inmet.csv";
+		String arquivo = "bruto/amostras_imperatriz_inmet.csv";
+		String arquivo_queimadas = "bruto/tb_amostras_final_201908251648.csv";
 		
 		ArrayList<ArrayList<String>> amostras = csv_to_ArrayList(pasta+arquivo, 1);
 		
+		ArrayList<ArrayList<String>> amostras_queimadas = csv_to_ArrayList(pasta+arquivo_queimadas, 1);
+		
+		/*ArrayList<ArrayList<String>> remover_nao_queimadas = new ArrayList<ArrayList<String>>();
+		
+		// irá remover todos os dias em que NÃO HOUVERAM queimadas
+		for(ArrayList<String> amostra : amostras_queimadas) {
+			if(amostra.get(4).equals("false")) {
+				remover_nao_queimadas.add(amostra);
+				
+			}
+		}
+		
+		amostras_queimadas.removeAll(remover_nao_queimadas);
+*/
 		System.out.println(amostras.get(amostras.size()-1).toString());
 		
 		ArrayList<ArrayList<Object>> amostras_conv = new ArrayList<ArrayList<Object>>();
@@ -113,12 +130,91 @@ public class PreProcessadorCSV {
 		
 		amostras_conv = agrupar_por_data(amostras_conv);
 		
+		amostras = filtrar_por_data_string(cal_inicial, cal_final, converter_para_strings(amostras_conv));
+		
+		amostras = mesclar_coluna_queimadas(amostras, amostras_queimadas);
 		
 		
-		salvarCSV(pasta+"filtrado_"+arquivo, converter_para_strings(amostras_conv));
+		ArrayList<ArrayList<String>> amostras_final = RF.calcularRF_analise(amostras, amostras_queimadas);
+		/*
+		for(ArrayList<String> amostra : amostras_final) {
+			
+			System.out.print("[");
+			for(int i = 0 ; i < amostra.size(); i++) {
+				System.out.print("\"" + amostra.get(i) + "\",");	
+			}
+			System.out.println("]");
+			
+		}*/
+		
+		int qtd_fogo_existente[] = {0,0,0,0,0};
+		int qtd_fogo_nao_existente[] = {0,0,0,0,0};
+		
+		for(ArrayList<String> amostra : amostras_final) {
+			
+			int classe_risco = Integer.parseInt(amostra.get(6));
+			boolean houve_fogo = Boolean.parseBoolean(amostra.get(4));
+			
+			if(houve_fogo) {
+				qtd_fogo_existente[classe_risco]++;
+			} else {
+				qtd_fogo_nao_existente[classe_risco]++;
+			}
+		}
+		
+		System.out.println("Classe : Com Fogo : Sem Fogo : Total");
+		for(int i = 0; i<5; i++) {
+			
+			
+			System.out.printf("%d : %d : %d : %d\n", i, qtd_fogo_existente[i], (qtd_fogo_nao_existente[i]), qtd_fogo_existente[i] + qtd_fogo_nao_existente[i]);
+			
+		}
+		
+		
+		
+		
+		//String cabecalho = "\"Data\",\"Precipitacao\",\"TempMaxima\",\"Umidade Relativa Media\",\"Dias de Secura\",\"Risco de Fogo\"";
+		
+		//RF.salvarCSV(cabecalho,pasta+"/com_queimadas/filtrado_amostras.csv", amostras_final);
 		
 	}
 	
+	public static ArrayList<ArrayList<String>> mesclar_coluna_queimadas(ArrayList<ArrayList<String>> amostras,
+			ArrayList<ArrayList<String>> amostras_queimadas) throws ParseException {
+		
+			for(ArrayList<String> amostra : amostras) {
+			
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			formatter.setTimeZone(TimeZone.getTimeZone("America/Brasilia"));
+			Date data_hora = formatter.parse(amostra.get(0));
+			
+			Calendar data = Calendar.getInstance();
+			data.setTimeInMillis(data_hora.getTime());
+			
+			for(ArrayList<String> amostra_queim : amostras_queimadas) {
+				
+				SimpleDateFormat formatter_q = new SimpleDateFormat("yyyy-MM-dd");
+				formatter_q.setTimeZone(TimeZone.getTimeZone("America/Brasilia"));
+				Date data_hora_q = formatter.parse(amostra_queim.get(0));
+				
+				Calendar data_q = Calendar.getInstance();
+				data_q.setTimeInMillis(data_hora_q.getTime());
+				/*
+				System.out.print(data_q.get(Calendar.YEAR)+"-"+(data_q.get(Calendar.MONTH)+1)+"-"+data_q.get(Calendar.DAY_OF_MONTH));
+				System.out.print(" / ");
+				System.out.println(data.get(Calendar.YEAR)+"-"+(data.get(Calendar.MONTH)+1)+"-"+data.get(Calendar.DAY_OF_MONTH));
+				*/
+				if(data_q.compareTo(data) == 0) {
+					amostra.add(amostra_queim.get(4));
+				}
+			}
+			
+			
+		}
+		
+		return amostras;
+	}
+
 	private static ArrayList<ArrayList<Object>> agrupar_por_data(ArrayList<ArrayList<Object>> amostras) {
 
 		ArrayList<ArrayList<Object>> nova_lista = new ArrayList<ArrayList<Object>>();

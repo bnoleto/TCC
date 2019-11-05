@@ -56,7 +56,7 @@ public class Analisador {
 	private AnalisarGrafico arquivo_atual;
 	private HashMap<String, AnalisarGrafico> arquivos = new HashMap<String,AnalisarGrafico>();
 	
-	public String[] findFoldersInDirectory(String directoryPath) {
+	public static String[] findFoldersInDirectory(String directoryPath) {
 	    File directory = new File(directoryPath);
 		
 	    FileFilter directoryFileFilter = new FileFilter() {

@@ -7,16 +7,23 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.block.BlockBorder;
+import org.jfree.chart.labels.PieSectionLabelGenerator;
+import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.SamplingXYLineRenderer;
 import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.general.PieDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.graphics2d.svg.SVGGraphics2D;
@@ -25,9 +32,9 @@ import org.jfree.graphics2d.svg.SVGUtils;
 public class NoletoGrafico {
 	/*
 	public static void gerarGrafico(ArrayList<ArrayList<ArrayList<Double[]>>> dados, File dir, Stats stat) throws IOException {
-		gerarChart(dados, 0,stat.ordinal(),"Treinamento: "+stat.name().toUpperCase(), "�POCA", stat.name().toUpperCase(), dir+"/"+stat.toString().toLowerCase(),true);
+		gerarChart(dados, 0,stat.ordinal(),"Treinamento: "+stat.name().toUpperCase(), "ï¿½POCA", stat.name().toUpperCase(), dir+"/"+stat.toString().toLowerCase(),true);
 		
-		System.out.println("Gr�fico "+ stat.name()+ " gerado!");
+		System.out.println("Grï¿½fico "+ stat.name()+ " gerado!");
 	}*/
 	
 	public static void gerarGraficos(String nome_rede) throws IOException, ClassNotFoundException {
@@ -41,8 +48,54 @@ public class NoletoGrafico {
         
         NoletoGrafico.gerarGraficos(dados, dir);
         
-        System.out.println("Gráficos gerados!");
+        System.out.println("GrÃ¡ficos gerados!");
 		
+	}
+	
+	public static void main(String[] args) throws IOException {
+		
+		gerarPizza();
+	}
+	
+	public static void gerarPizza() throws IOException {
+		
+		DefaultPieDataset dataset = new DefaultPieDataset();
+		
+		dataset.setValue("COM FOGO", 44);
+		dataset.setValue("SEM FOGO", 49);
+		
+		//PiePlot pie_plot = new PiePlot3D(dataset);
+		
+		JFreeChart chart = ChartFactory.createPieChart("Risco MÉDIO+ALTO+CRÍTICO (MLP)", dataset, true, false, false);
+		
+		chart.setBackgroundPaint(new Color(0xFF, 0xFF, 0xFF, 0xFF));
+        chart.getLegend().setFrame(new BlockBorder());
+
+        PiePlot plot = (PiePlot) chart.getPlot();
+        
+        plot.setShadowPaint(null);
+        
+        plot.setSimpleLabels(true);
+        
+        DecimalFormat df = new DecimalFormat();
+        df.applyPattern("0.00%");
+        
+        StandardPieSectionLabelGenerator gen = new StandardPieSectionLabelGenerator("{1} ({2})", new DecimalFormat("0"), df);
+        
+        plot.setLabelGenerator(gen);
+
+        plot.setBackgroundPaint(new Color(0xFF, 0xFF, 0xFF, 0));
+        plot.setOutlinePaint(new Color(0x00, 0x00, 0x00, 0));
+        plot.setInsets(new RectangleInsets(0, 1, 0, 0));
+		
+		SVGGraphics2D g2 = new SVGGraphics2D(640, 480);
+        Rectangle r = new Rectangle(0, 0, 640, 480);
+        chart.draw(g2, r);
+        
+        File f = new File(System.getProperty("user.dir") + "MLP_c2c3c4.svg");
+        
+        SVGUtils.writeToSVG(f, g2.getSVGElement());
+
 	}
 
 	public static void gerarGraficos(ArrayList<ArrayList<ArrayList<Double[]>>> dados, File dir2) throws IOException {

@@ -2,12 +2,14 @@ package codigos;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
+import preprocessamento.PreProcessadorCSV;
 import preprocessamento.calculo_risco_fogo.RF;
 import preprocessamento.calculo_risco_fogo.Risco;
 
@@ -15,6 +17,75 @@ public class Classificador {
 	
 	private MultiLayerNetwork model;
 	private ArrayList<ArrayList<String>> variaveis_normalizacao;
+	
+	public static void main(String[] args) throws IOException, ParseException {
+		
+		String pasta = System.getProperty("user.dir") + "/src/resources/datasets/";
+		String arquivo = "com_queimadas/filtrado_amostras_inpe.csv";
+		
+		ArrayList<ArrayList<String>> tabela = PreProcessadorCSV.csv_to_ArrayList(pasta+arquivo, 1);
+		
+		for(ArrayList<String> amostra : tabela) {
+			amostra.remove(5);
+
+			double prec = Double.parseDouble(amostra.get(1));
+			double temp = Double.parseDouble(amostra.get(2));
+			double umid = Double.parseDouble(amostra.get(3));
+			double pse = Double.parseDouble(amostra.get(4));
+			
+			amostra.add(String.valueOf(Classificador.classificarRF("20191005_2034", prec, temp, umid, pse).ordinal()));
+		}
+		
+		String arquivo_queimadas = "bruto/tb_amostras_final_201908251648.csv";
+		
+		ArrayList<ArrayList<String>> amostras_queimadas = PreProcessadorCSV.csv_to_ArrayList(pasta+arquivo_queimadas, 1);
+		
+		tabela = PreProcessadorCSV.mesclar_coluna_queimadas(tabela, amostras_queimadas);
+		
+		/*
+		for(ArrayList<String> amostra : tabela) {
+			
+			System.out.print("[");
+			for(int i = 0 ; i < amostra.size(); i++) {
+				System.out.print("\"" + amostra.get(i) + "\",");	
+			}
+			System.out.println("]");
+			
+		}*/
+		
+		int qtd_fogo_existente[] = {0,0,0,0,0};
+		int qtd_fogo_nao_existente[] = {0,0,0,0,0};
+		
+		for(ArrayList<String> amostra : tabela) {
+			
+			int classe_risco = Integer.parseInt(amostra.get(5));
+			boolean houve_fogo = Boolean.parseBoolean(amostra.get(6));
+			
+			if(houve_fogo) {
+				qtd_fogo_existente[classe_risco]++;
+			} else {
+				qtd_fogo_nao_existente[classe_risco]++;
+			}
+		}
+		
+		System.out.println("Classe : Com Fogo : Sem Fogo : Total");
+		for(int i = 0; i<5; i++) {
+			
+			
+			System.out.printf("%d : %d : %d : %d\n", i, qtd_fogo_existente[i], (qtd_fogo_nao_existente[i]), qtd_fogo_existente[i] + qtd_fogo_nao_existente[i]);
+			
+		}
+		
+
+		
+		
+		
+		/*
+		String colunas = "\"Data\",\"Precipitacao\",\"TempMaxima\",\"Umidade Relativa Media\",\"Dias de Secura\",\"Risco de Fogo Obtido pela Rede\"";
+		
+		RF.salvarCSV(colunas, pasta+"com_queimadas/filtrado_amostras_bnoleto.csv", tabela);*/
+		
+	}
 	
 	public Classificador(String nome_rede) throws IOException{
 		
