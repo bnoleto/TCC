@@ -5,15 +5,9 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
-import java.awt.Window.Type;
 import javax.swing.ImageIcon;
-import java.awt.FlowLayout;
-import java.awt.Frame;
-import java.awt.Component;
-import javax.swing.Box;
 import java.awt.Color;
 
 public class Grafico extends JFrame {

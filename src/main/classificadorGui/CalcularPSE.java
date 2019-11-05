@@ -15,6 +15,7 @@ import java.awt.event.ActionListener;
 import java.text.ParseException;
 import java.awt.event.ActionEvent;
 import java.awt.Toolkit;
+import java.awt.Font;
 
 public class CalcularPSE extends JFrame {
 /*
@@ -73,118 +74,130 @@ public class CalcularPSE extends JFrame {
 	 */
 	public CalcularPSE(JTextField field_resultado) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage(CalcularPSE.class.getResource("/resources/calculadora.png")));
-		setTitle("Calcular PSE");
+		setTitle("Calcular Dias de Secura");
 		setResizable(false);
 		setType(Type.UTILITY);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 348, 209);
+		setBounds(100, 100, 348, 231);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
 		JLabel lbl_prec1 = new JLabel("Prec1");
-		lbl_prec1.setBounds(10, 11, 46, 14);
+		lbl_prec1.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec1.setBounds(21, 15, 46, 14);
 		contentPane.add(lbl_prec1);
 		
 		fld_prec1 = new JTextField();
 		lbl_prec1.setLabelFor(fld_prec1);
-		fld_prec1.setBounds(66, 8, 86, 20);
+		fld_prec1.setBounds(77, 12, 86, 20);
 		contentPane.add(fld_prec1);
 		fld_prec1.setColumns(10);
 		
 		JLabel lbl_prec2 = new JLabel("Prec2");
-		lbl_prec2.setBounds(10, 39, 46, 14);
+		lbl_prec2.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec2.setBounds(21, 43, 46, 14);
 		contentPane.add(lbl_prec2);
 		
 		fld_prec2 = new JTextField();
 		lbl_prec2.setLabelFor(fld_prec2);
 		fld_prec2.setColumns(10);
-		fld_prec2.setBounds(66, 36, 86, 20);
+		fld_prec2.setBounds(77, 40, 86, 20);
 		contentPane.add(fld_prec2);
 		
 		fld_prec4 = new JTextField();
 		fld_prec4.setColumns(10);
-		fld_prec4.setBounds(66, 92, 86, 20);
+		fld_prec4.setBounds(77, 96, 86, 20);
 		contentPane.add(fld_prec4);
 		
 		JLabel lbl_prec4 = new JLabel("Prec4");
-		lbl_prec4.setBounds(10, 95, 46, 14);
+		lbl_prec4.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec4.setBounds(21, 99, 46, 14);
 		contentPane.add(lbl_prec4);
 		
 		JLabel lbl_prec3 = new JLabel("Prec3");
-		lbl_prec3.setBounds(10, 67, 46, 14);
+		lbl_prec3.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec3.setBounds(21, 71, 46, 14);
 		contentPane.add(lbl_prec3);
 		
 		fld_prec3 = new JTextField();
 		fld_prec3.setColumns(10);
-		fld_prec3.setBounds(66, 64, 86, 20);
+		fld_prec3.setBounds(77, 68, 86, 20);
 		contentPane.add(fld_prec3);
 		
 		fld_prec10 = new JTextField();
 		fld_prec10.setColumns(10);
-		fld_prec10.setBounds(66, 148, 86, 20);
+		fld_prec10.setBounds(77, 152, 86, 20);
 		contentPane.add(fld_prec10);
 		
 		JLabel lbl_prec10 = new JLabel("Prec10");
-		lbl_prec10.setBounds(10, 151, 46, 14);
+		lbl_prec10.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec10.setBounds(21, 155, 46, 14);
 		contentPane.add(lbl_prec10);
 		
 		JLabel lbl_prec5 = new JLabel("Prec5");
-		lbl_prec5.setBounds(10, 123, 46, 14);
+		lbl_prec5.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec5.setBounds(21, 127, 46, 14);
 		contentPane.add(lbl_prec5);
 		
 		fld_prec5 = new JTextField();
 		fld_prec5.setColumns(10);
-		fld_prec5.setBounds(66, 120, 86, 20);
+		fld_prec5.setBounds(77, 124, 86, 20);
 		contentPane.add(fld_prec5);
 		
 		JLabel lbl_prec15 = new JLabel("Prec15");
-		lbl_prec15.setBounds(181, 11, 46, 14);
+		lbl_prec15.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec15.setBounds(192, 15, 46, 14);
 		contentPane.add(lbl_prec15);
 		
 		fld_prec15 = new JTextField();
 		fld_prec15.setColumns(10);
-		fld_prec15.setBounds(237, 8, 86, 20);
+		fld_prec15.setBounds(248, 12, 86, 20);
 		contentPane.add(fld_prec15);
 		
 		JLabel lbl_prec30 = new JLabel("Prec30");
-		lbl_prec30.setBounds(181, 39, 46, 14);
+		lbl_prec30.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec30.setBounds(192, 43, 46, 14);
 		contentPane.add(lbl_prec30);
 		
 		fld_prec30 = new JTextField();
 		fld_prec30.setColumns(10);
-		fld_prec30.setBounds(237, 36, 86, 20);
+		fld_prec30.setBounds(248, 40, 86, 20);
 		contentPane.add(fld_prec30);
 		
 		JLabel lbl_prec60 = new JLabel("Prec60");
-		lbl_prec60.setBounds(181, 67, 46, 14);
+		lbl_prec60.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec60.setBounds(192, 71, 46, 14);
 		contentPane.add(lbl_prec60);
 		
 		fld_prec60 = new JTextField();
 		fld_prec60.setColumns(10);
-		fld_prec60.setBounds(237, 64, 86, 20);
+		fld_prec60.setBounds(248, 68, 86, 20);
 		contentPane.add(fld_prec60);
 		
 		JLabel lbl_prec90 = new JLabel("Prec90");
-		lbl_prec90.setBounds(181, 95, 46, 14);
+		lbl_prec90.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec90.setBounds(192, 99, 46, 14);
 		contentPane.add(lbl_prec90);
 		
 		fld_prec90 = new JTextField();
 		fld_prec90.setColumns(10);
-		fld_prec90.setBounds(237, 92, 86, 20);
+		fld_prec90.setBounds(248, 96, 86, 20);
 		contentPane.add(fld_prec90);
 		
 		JLabel lbl_prec120 = new JLabel("Prec120");
-		lbl_prec120.setBounds(181, 123, 46, 14);
+		lbl_prec120.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		lbl_prec120.setBounds(192, 127, 46, 14);
 		contentPane.add(lbl_prec120);
 		
 		fld_prec120 = new JTextField();
 		fld_prec120.setColumns(10);
-		fld_prec120.setBounds(237, 120, 86, 20);
+		fld_prec120.setBounds(248, 124, 86, 20);
 		contentPane.add(fld_prec120);
 		
 		JButton btnCalcular = new JButton("Calcular");
+		btnCalcular.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		btnCalcular.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
@@ -212,7 +225,7 @@ public class CalcularPSE extends JFrame {
 				dispose();
 			}
 		});
-		btnCalcular.setBounds(181, 147, 142, 23);
+		btnCalcular.setBounds(192, 151, 142, 23);
 		contentPane.add(btnCalcular);
 	}
 }

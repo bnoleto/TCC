@@ -64,7 +64,7 @@ public class ClassificadorGUI extends JFrame {
 		
 		c1.encerrar_conexao();
 		
-		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 		/*
 		for(ArrayList<String> linha : tabela) {
 			String str_linha = "";
@@ -104,34 +104,39 @@ public class ClassificadorGUI extends JFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Preencher a partir do banco de dados", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panel.setBounds(10, 110, 604, 77);
+		panel.setBounds(17, 110, 604, 77);
 		contentPane.add(panel);
 		panel.setLayout(null);
 		
 		ButtonGroup radios = new ButtonGroup();
 		
 		JComboBox<String> cmb_mes = new JComboBox<String>();
+		cmb_mes.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		cmb_mes.setBounds(225, 39, 100, 20);
 		panel.add(cmb_mes);
 		cmb_mes.setModel(new DefaultComboBoxModel<String>(new String[] {"Janeiro", "Fevereiro", "Mar\u00E7o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"}));
 		
 		JComboBox<String> cmb_dia = new JComboBox<String>();
+		cmb_dia.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		cmb_dia.setBounds(164, 39, 50, 20);
 		panel.add(cmb_dia);
 		cmb_dia.setModel(new DefaultComboBoxModel<String>(new String[] {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"}));
 		
 		fld_ano = new JTextField();
+		fld_ano.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		fld_ano.setBounds(337, 39, 55, 20);
 		panel.add(fld_ano);
 		fld_ano.setColumns(10);
 		
 		JLabel label = new JLabel("");
+		label.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setForeground(Color.RED);
 		label.setBounds(462, 42, 132, 14);
 		panel.add(label);
 		
-		JButton btnOk = new JButton("OK");
+		JButton btnOk = new JButton("Ok");
+		btnOk.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		btnOk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String data = "";
@@ -156,11 +161,11 @@ public class ClassificadorGUI extends JFrame {
 					
 					if(houve_incendio) {
 						label.setForeground(Color.RED);
-						label.setText("(houve incÍndio)");
+						label.setText("(houve inc√™ndio)");
 						
 					} else {
 						label.setForeground(Color.BLUE);
-						label.setText("(sem incÍndio)");
+						label.setText("(sem inc√™ndio)");
 					}
 					
 				} catch (NullPointerException e1){
@@ -176,59 +181,70 @@ public class ClassificadorGUI extends JFrame {
 		panel.add(btnOk);
 		
 		JLabel lblMs = new JLabel("M\u00EAs");
+		lblMs.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		lblMs.setBounds(225, 18, 46, 14);
 		panel.add(lblMs);
 		
 		JLabel lblAno = new JLabel("Ano");
+		lblAno.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		lblAno.setBounds(337, 18, 46, 14);
 		panel.add(lblAno);
 		
 		JLabel lblDia = new JLabel("Dia");
+		lblDia.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		lblDia.setBounds(164, 18, 46, 14);
 		panel.add(lblDia);
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Preencher manualmente", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panel_1.setBounds(10, 198, 604, 131);
+		panel_1.setBounds(17, 198, 604, 131);
 		contentPane.add(panel_1);
 		panel_1.setLayout(null);
 		
 		fld_tempmax = new JTextField();
+		fld_tempmax.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		fld_tempmax.setBounds(157, 48, 120, 20);
 		panel_1.add(fld_tempmax);
 		fld_tempmax.setColumns(10);
 		
 		JLabel lbl_tempmax = new JLabel("Temperatura M\u00E1xima");
+		lbl_tempmax.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		lbl_tempmax.setBounds(157, 23, 120, 14);
 		panel_1.add(lbl_tempmax);
 		lbl_tempmax.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		fld_umidmin = new JTextField();
+		fld_umidmin.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		fld_umidmin.setBounds(287, 48, 120, 20);
 		panel_1.add(fld_umidmin);
 		fld_umidmin.setColumns(10);
 		
 		JLabel lbl_umidmin = new JLabel("Umidade M\u00EDnima");
+		lbl_umidmin.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		lbl_umidmin.setBounds(287, 23, 120, 14);
 		panel_1.add(lbl_umidmin);
 		lbl_umidmin.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		fld_diassecura = new JTextField();
+		fld_diassecura.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		fld_diassecura.setBounds(417, 48, 120, 20);
 		panel_1.add(fld_diassecura);
 		fld_diassecura.setColumns(10);
 		
 		JLabel lbl_diassecura = new JLabel("Dias de Secura");
+		lbl_diassecura.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		lbl_diassecura.setBounds(417, 23, 162, 14);
 		panel_1.add(lbl_diassecura);
 		lbl_diassecura.setHorizontalAlignment(SwingConstants.CENTER);
 		
 		fld_precipitacao = new JTextField();
+		fld_precipitacao.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		fld_precipitacao.setBounds(27, 48, 120, 20);
 		panel_1.add(fld_precipitacao);
 		fld_precipitacao.setColumns(10);
 		
 		JLabel lbl_precipitacao = new JLabel("Precipita\u00E7\u00E3o");
+		lbl_precipitacao.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		lbl_precipitacao.setBounds(27, 23, 120, 14);
 		panel_1.add(lbl_precipitacao);
 		lbl_precipitacao.setHorizontalAlignment(SwingConstants.CENTER);
@@ -242,16 +258,18 @@ public class ClassificadorGUI extends JFrame {
 		
 		JPanel panel_2 = new JPanel();
 		panel_2.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Selecionar modelo para realizar o c\u00E1lculo", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panel_2.setBounds(10, 11, 604, 88);
+		panel_2.setBounds(17, 11, 604, 88);
 		contentPane.add(panel_2);
 		panel_2.setLayout(null);
 		
 		JComboBox<String> cmb_selectrede = new JComboBox<String>();
-		cmb_selectrede.setBounds(154, 48, 140, 20);
+		cmb_selectrede.setFont(new Font("Cantarell", Font.PLAIN, 12));
+		cmb_selectrede.setBounds(166, 48, 189, 20);
 		cmb_selectrede.setModel(new DefaultComboBoxModel<String>(Analisador.findFoldersInDirectory(System.getProperty("user.dir")+"/redes/")));
 		panel_2.add(cmb_selectrede);
 		
 		JRadioButton rdbtnInpe = new JRadioButton("INPE");
+		rdbtnInpe.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		rdbtnInpe.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				cmb_selectrede.setEnabled(false);
@@ -263,18 +281,19 @@ public class ClassificadorGUI extends JFrame {
 		
 		
 		JRadioButton rdbtnRedeNeuralArtificial = new JRadioButton("Rede Neural Artificial");
+		rdbtnRedeNeuralArtificial.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		rdbtnRedeNeuralArtificial.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
 				cmb_selectrede.setEnabled(true);
 			}
 		});
-		rdbtnRedeNeuralArtificial.setBounds(23, 47, 125, 23);
+		rdbtnRedeNeuralArtificial.setBounds(23, 47, 139, 23);
 		panel_2.add(rdbtnRedeNeuralArtificial);
 		
 		JPanel panel_3 = new JPanel();
 		panel_3.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Resultado", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_3.setBounds(10, 340, 604, 90);
+		panel_3.setBounds(17, 340, 604, 90);
 		contentPane.add(panel_3);
 		panel_3.setLayout(null);
 		
@@ -325,19 +344,19 @@ public class ClassificadorGUI extends JFrame {
 				
 				if(rf_obtido == Risco.MINIMO) {
 					lbl_resultado.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/rf_minimo.png")));
-					lbl_resultado.setText("Risco MÕNIMO");
+					lbl_resultado.setText("Risco M√çNIMO");
 				} else if(rf_obtido == Risco.BAIXO) {
 					lbl_resultado.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/rf_baixo.png")));
 					lbl_resultado.setText("Risco BAIXO");
 				} else if(rf_obtido == Risco.MEDIO) {
 					lbl_resultado.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/rf_medio.png")));
-					lbl_resultado.setText("Risco M…DIO");
+					lbl_resultado.setText("Risco M√âDIO");
 				} else if(rf_obtido == Risco.ALTO) {
 					lbl_resultado.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/rf_alto.png")));
 					lbl_resultado.setText("Risco ALTO");
 				} else if(rf_obtido == Risco.CRITICO) {
 					lbl_resultado.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/rf_critico.png")));
-					lbl_resultado.setText("Risco CRÕTICO");
+					lbl_resultado.setText("Risco CR√çTICO");
 				} else {
 					lbl_resultado.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/rf_indefinido.png")));
 					lbl_resultado.setText("Risco INDEFINIDO");

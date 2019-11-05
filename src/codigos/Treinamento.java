@@ -2,7 +2,6 @@ package codigos;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -35,7 +34,6 @@ import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import estatisticas.NoletoGrafico;
-import preprocessamento.PreProcessadorCSV;
 import preprocessamento.calculo_risco_fogo.RF;
 import utils.Horario;
 

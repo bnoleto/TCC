@@ -48,7 +48,7 @@ public class NoletoGrafico {
         
         NoletoGrafico.gerarGraficos(dados, dir);
         
-        System.out.println("GrÃ¡ficos gerados!");
+        System.out.println("Gráficos gerados!");
 		
 	}
 	
