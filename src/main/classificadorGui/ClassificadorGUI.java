@@ -204,7 +204,7 @@ public class ClassificadorGUI extends JFrame {
 		panel.add(lblDia);
 		
 		fld_host = new JTextField();
-		fld_host.setText("192.168.0.103");
+		fld_host.setText("cloud-bnoleto.ddns.net");
 		fld_host.setBounds(22, 52, 114, 20);
 		panel.add(fld_host);
 		fld_host.setColumns(10);
@@ -215,7 +215,7 @@ public class ClassificadorGUI extends JFrame {
 		panel.add(lblHost);
 		
 		fld_porta = new JTextField();
-		fld_porta.setText("1515");
+		fld_porta.setText("3306");
 		fld_porta.setColumns(10);
 		fld_porta.setBounds(148, 52, 50, 20);
 		panel.add(fld_porta);
@@ -239,7 +239,6 @@ public class ClassificadorGUI extends JFrame {
 		panel.add(fld_usuario);
 		
 		fld_senha = new JPasswordField();
-		fld_senha.setText("view");
 		fld_senha.setColumns(10);
 		fld_senha.setBounds(336, 52, 114, 20);
 		panel.add(fld_senha);
