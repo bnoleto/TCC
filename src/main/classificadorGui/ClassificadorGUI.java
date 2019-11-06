@@ -37,6 +37,7 @@ import preprocessamento.calculo_risco_fogo.Vegetacao;
 
 import java.awt.Color;
 import javax.swing.ImageIcon;
+import javax.swing.JPasswordField;
 
 public class ClassificadorGUI extends JFrame {
 
@@ -47,6 +48,10 @@ public class ClassificadorGUI extends JFrame {
 	private JTextField fld_umidmin;
 	private JTextField fld_diassecura;
 	private JTextField fld_precipitacao;
+	private JTextField fld_host;
+	private JTextField fld_porta;
+	private JTextField fld_usuario;
+	private JPasswordField fld_senha;
 
 	/**
 	 * Launch the application.
@@ -58,11 +63,7 @@ public class ClassificadorGUI extends JFrame {
 	 */
 	public static void main(String[] args) throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException, UnsupportedLookAndFeelException {
 		
-		ConexaoDB c1 = new ConexaoDB("192.168.0.103:1515/dadosmet", "view", "view");
 		
-		tabela = c1.getTabela();
-		
-		c1.encerrar_conexao();
 		
 		UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 		/*
@@ -96,7 +97,7 @@ public class ClassificadorGUI extends JFrame {
 		setResizable(false);
 		setTitle("Classificador");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 640, 480);
+		setBounds(100, 100, 640, 550);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -104,27 +105,30 @@ public class ClassificadorGUI extends JFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Preencher a partir do banco de dados", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panel.setBounds(17, 110, 604, 77);
+		panel.setBounds(17, 110, 604, 155);
 		contentPane.add(panel);
 		panel.setLayout(null);
 		
 		ButtonGroup radios = new ButtonGroup();
 		
 		JComboBox<String> cmb_mes = new JComboBox<String>();
+		cmb_mes.setEnabled(false);
 		cmb_mes.setFont(new Font("Cantarell", Font.PLAIN, 12));
-		cmb_mes.setBounds(225, 39, 100, 20);
+		cmb_mes.setBounds(83, 105, 100, 20);
 		panel.add(cmb_mes);
 		cmb_mes.setModel(new DefaultComboBoxModel<String>(new String[] {"Janeiro", "Fevereiro", "Mar\u00E7o", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"}));
 		
 		JComboBox<String> cmb_dia = new JComboBox<String>();
+		cmb_dia.setEnabled(false);
 		cmb_dia.setFont(new Font("Cantarell", Font.PLAIN, 12));
-		cmb_dia.setBounds(164, 39, 50, 20);
+		cmb_dia.setBounds(22, 105, 50, 20);
 		panel.add(cmb_dia);
 		cmb_dia.setModel(new DefaultComboBoxModel<String>(new String[] {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31"}));
 		
 		fld_ano = new JTextField();
+		fld_ano.setEnabled(false);
 		fld_ano.setFont(new Font("Cantarell", Font.PLAIN, 12));
-		fld_ano.setBounds(337, 39, 55, 20);
+		fld_ano.setBounds(195, 105, 55, 20);
 		panel.add(fld_ano);
 		fld_ano.setColumns(10);
 		
@@ -132,10 +136,11 @@ public class ClassificadorGUI extends JFrame {
 		label.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setForeground(Color.RED);
-		label.setBounds(462, 42, 132, 14);
+		label.setBounds(323, 105, 269, 20);
 		panel.add(label);
 		
 		JButton btnOk = new JButton("Ok");
+		btnOk.setEnabled(false);
 		btnOk.setFont(new Font("Cantarell", Font.PLAIN, 12));
 		btnOk.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -177,27 +182,76 @@ public class ClassificadorGUI extends JFrame {
 
 			}
 		});
-		btnOk.setBounds(402, 39, 50, 23);
+		btnOk.setBounds(260, 105, 50, 20);
 		panel.add(btnOk);
 		
 		JLabel lblMs = new JLabel("M\u00EAs");
+		lblMs.setEnabled(false);
 		lblMs.setFont(new Font("Cantarell", Font.PLAIN, 12));
-		lblMs.setBounds(225, 18, 46, 14);
+		lblMs.setBounds(83, 84, 46, 14);
 		panel.add(lblMs);
 		
 		JLabel lblAno = new JLabel("Ano");
+		lblAno.setEnabled(false);
 		lblAno.setFont(new Font("Cantarell", Font.PLAIN, 12));
-		lblAno.setBounds(337, 18, 46, 14);
+		lblAno.setBounds(195, 84, 46, 14);
 		panel.add(lblAno);
 		
 		JLabel lblDia = new JLabel("Dia");
+		lblDia.setEnabled(false);
 		lblDia.setFont(new Font("Cantarell", Font.PLAIN, 12));
-		lblDia.setBounds(164, 18, 46, 14);
+		lblDia.setBounds(22, 84, 46, 14);
 		panel.add(lblDia);
+		
+		fld_host = new JTextField();
+		fld_host.setText("192.168.0.103");
+		fld_host.setBounds(22, 52, 114, 20);
+		panel.add(fld_host);
+		fld_host.setColumns(10);
+		
+		JLabel lblHost = new JLabel("Host");
+		lblHost.setFont(new Font("Dialog", Font.PLAIN, 12));
+		lblHost.setBounds(22, 32, 114, 14);
+		panel.add(lblHost);
+		
+		fld_porta = new JTextField();
+		fld_porta.setText("1515");
+		fld_porta.setColumns(10);
+		fld_porta.setBounds(148, 52, 50, 20);
+		panel.add(fld_porta);
+		
+		JLabel lblPorta = new JLabel("Porta");
+		lblPorta.setFont(new Font("Dialog", Font.PLAIN, 12));
+		lblPorta.setBounds(148, 32, 50, 14);
+		panel.add(lblPorta);
+		
+		
+		
+		JLabel lblUsurio = new JLabel("Usuário");
+		lblUsurio.setFont(new Font("Dialog", Font.PLAIN, 12));
+		lblUsurio.setBounds(210, 32, 114, 14);
+		panel.add(lblUsurio);
+		
+		fld_usuario = new JTextField();
+		fld_usuario.setText("view");
+		fld_usuario.setColumns(10);
+		fld_usuario.setBounds(210, 52, 114, 20);
+		panel.add(fld_usuario);
+		
+		fld_senha = new JPasswordField();
+		fld_senha.setText("view");
+		fld_senha.setColumns(10);
+		fld_senha.setBounds(336, 52, 114, 20);
+		panel.add(fld_senha);
+		
+		JLabel lblSenha = new JLabel("Senha");
+		lblSenha.setFont(new Font("Dialog", Font.PLAIN, 12));
+		lblSenha.setBounds(336, 32, 114, 14);
+		panel.add(lblSenha);
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Preencher manualmente", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
-		panel_1.setBounds(17, 198, 604, 131);
+		panel_1.setBounds(17, 277, 604, 131);
 		contentPane.add(panel_1);
 		panel_1.setLayout(null);
 		
@@ -251,7 +305,7 @@ public class ClassificadorGUI extends JFrame {
 		
 		JButton btn_calcularpse = new JButton("");
 		btn_calcularpse.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/calculadora.png")));
-		btn_calcularpse.setBounds(547, 47, 32, 23);
+		btn_calcularpse.setBounds(547, 48, 32, 20);
 		panel_1.add(btn_calcularpse);
 		
 		
@@ -293,7 +347,7 @@ public class ClassificadorGUI extends JFrame {
 		
 		JPanel panel_3 = new JPanel();
 		panel_3.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null), "Resultado", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_3.setBounds(17, 340, 604, 90);
+		panel_3.setBounds(17, 419, 604, 90);
 		contentPane.add(panel_3);
 		panel_3.setLayout(null);
 		
@@ -303,6 +357,50 @@ public class ClassificadorGUI extends JFrame {
 		lbl_resultado.setIcon(new ImageIcon(ClassificadorGUI.class.getResource("/resources/rf_indefinido.png")));
 		lbl_resultado.setBounds(10, 32, 584, 32);
 		panel_3.add(lbl_resultado);
+		
+		JButton btnConectar = new JButton("Conectar");
+		btnConectar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				String url = fld_host.getText()+ ":" + fld_porta.getText() + "/dadosmet";
+				
+				String usuario = fld_usuario.getText();
+				
+				String senha = String.valueOf(fld_senha.getPassword());
+
+				try {
+					ConexaoDB c1 = new ConexaoDB(url, usuario, senha);
+					tabela = c1.getTabela();
+					c1.encerrar_conexao();
+					
+					lblHost.setEnabled(false);
+					lblPorta.setEnabled(false);
+					lblUsurio.setEnabled(false);
+					lblSenha.setEnabled(false);
+					btnConectar.setEnabled(false);
+					fld_host.setEnabled(false);
+					fld_porta.setEnabled(false);
+					fld_usuario.setEnabled(false);
+					fld_senha.setEnabled(false);
+					
+					lblDia.setEnabled(true);
+					lblMs.setEnabled(true);
+					lblAno.setEnabled(true);
+					fld_ano.setEnabled(true);
+					cmb_dia.setEnabled(true);
+					cmb_mes.setEnabled(true);
+					btnOk.setEnabled(true);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					System.out.println("Não foi possível conectar ao banco de dados.");
+				}
+				
+				
+			}
+		});
+		btnConectar.setFont(new Font("Dialog", Font.PLAIN, 12));
+		btnConectar.setBounds(462, 52, 120, 20);
+		panel.add(btnConectar);
 		
 		
 		JButton btn_calcularrf = new JButton("Calcular Risco de Fogo");
