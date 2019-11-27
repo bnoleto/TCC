@@ -603,6 +603,19 @@ public class Analisador {
 		createComponentMap((JPanel)frmAnliseDosGrficos.getContentPane().getComponent(0));
 		
 		atualizarDados(arquivo_atual.get_epoca_menor_loss_validacao());
+		
+		Double[] classe0 = arquivo_atual.get_dados().get(1).get(99999).get(1);
+		Double[] classe1 = arquivo_atual.get_dados().get(1).get(99999).get(2);
+		Double[] classe2 = arquivo_atual.get_dados().get(1).get(99999).get(3);
+		Double[] classe3 = arquivo_atual.get_dados().get(1).get(99999).get(4);
+		Double[] classe4 = arquivo_atual.get_dados().get(1).get(99999).get(5);
+		
+		System.out.println(classe0[0]);
+		System.out.println(classe1[0]);
+		System.out.println(classe2[0]);
+		System.out.println(classe3[0]);
+		System.out.println(classe4[0]);
+
 
 	}
 }

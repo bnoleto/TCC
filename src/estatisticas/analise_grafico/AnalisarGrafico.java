@@ -89,6 +89,10 @@ public class AnalisarGrafico {
 		System.out.println("Carregamento finalizado!");
 	}
 	
+	public ArrayList<ArrayList<ArrayList<Double[]>>> get_dados (){
+		return this.dados;
+	}
+	
 	public AnalisarGrafico(String nome_rede) throws IOException, ClassNotFoundException {
 		
 		FileInputStream fis = new FileInputStream(System.getProperty("user.dir") + "/redes/"+nome_rede+"/estatisticas.stats");
@@ -138,7 +142,7 @@ public class AnalisarGrafico {
 		
 		System.out.println("== Dataset " + dataset.toString() + " ==");
 		System.out.println("Menor " + stats.toString() + ": " + menor_valor);
-		System.out.println("Época: " + (epoca+1));
+		System.out.println("ï¿½poca: " + (epoca+1));
 		
 	}
 	
